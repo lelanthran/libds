@@ -90,12 +90,18 @@ int main (void)
       if (!(ds_array_remove (&dsa, i))) {
          fprintf (stderr, "Failed to remove element [%zu]:[%s]\n",
                           i, (const char *)dsa[i]);
-         goto errorexit;
+         break;
       }
    }
 
    ds_array_iterate (dsa, print_string);
    printf ("===================================\n");
+
+   char *tmp;
+
+   while ((tmp = ds_array_remove_head (&dsa))) {
+      printf ("[%s]\n", tmp);
+   }
 
    ret = EXIT_SUCCESS;
 
