@@ -18,3 +18,9 @@ These data structures are for small (in-memory) data. For large data use a libra
             ... // Use array[i]
         }
 
+## ds_str
+Functions for perfoming:
+1. String copy (with allocation),
+2. String concatenation (with allocation) resulting in a new string,
+3. String appending to an existing string (with reallocation of existing
+   string).
