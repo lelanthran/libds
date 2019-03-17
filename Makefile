@@ -7,13 +7,16 @@ BINPROGS=\
 	ds_array_test
 
 BINOBS=\
-	ds_array_test.o
+	ds_array_test.o\
+	ds_str_test.o
 
 OBS=\
-	ds_array.o
+	ds_array.o\
+	ds_str.o
 
 HEADERS=\
-	ds_array.h
+	ds_array.h\
+	ds_str.h
 
 
 CC=gcc
