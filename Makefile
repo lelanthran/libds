@@ -4,7 +4,8 @@
 #
 
 BINPROGS=\
-	ds_array_test
+	ds_array_test\
+	ds_str_test
 
 BINOBS=\
 	ds_array_test.o\

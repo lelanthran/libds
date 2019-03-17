@@ -24,10 +24,10 @@ int main (void)
    }
 
    const char *more1[] = {
-      "one ", "two", "three"
+      "one ", "two ", "three "
    };
    const char *more2[] = {
-      "ONE ", "TWO", "THREE"
+      "ONE ", "TWO ", "THREE "
    };
 
    for (size_t i=0; i<sizeof more1/sizeof more1[0]; i++) {
@@ -36,8 +36,8 @@ int main (void)
       }
    }
 
-   printf ("test_cat: [%s]\n", test_cat);
    printf ("test_dup: [%s]\n", test_dup);
+   printf ("test_cat: [%s]\n", test_cat);
    printf ("test_append: [%s]\n", test_append);
 
    ret = EXIT_SUCCESS;
