@@ -4,9 +4,9 @@
 
 #include "ds_array.h"
 
-static void print_string (const void *arg)
+static void print_string (void *arg)
 {
-   const char *s = arg;
+   char *s = arg;
    printf ("->[%s]\n", s);
 }
 
@@ -14,7 +14,7 @@ int main (void)
 {
    int ret = EXIT_FAILURE;
 
-   static const char *elements[] = {
+   static char *elements[] = {
       "one",
       "two",
       "three",
@@ -27,7 +27,7 @@ int main (void)
       "ten",
    };
 
-   const size_t el_len = sizeof elements / sizeof elements[0];
+   size_t el_len = sizeof elements / sizeof elements[0];
 
    void **dsa = ds_array_new ();
 
@@ -50,7 +50,7 @@ int main (void)
    size_t dsa_len = ds_array_length (dsa);
    for (size_t i=0; i<dsa_len; i++) {
       // Note: Can also simply use "dsa[i]"
-      const char *string = ds_array_index (dsa, i);
+      char *string = ds_array_index (dsa, i);
       printf ("[%zu]:[%s]\n", i, string);
    }
 
@@ -89,7 +89,7 @@ int main (void)
    for (size_t i=0; i<dsa_len; i+=3) {
       if (!(ds_array_remove (&dsa, i))) {
          fprintf (stderr, "Failed to remove element [%zu]:[%s]\n",
-                          i, (const char *)dsa[i]);
+                          i, (char *)dsa[i]);
          break;
       }
    }

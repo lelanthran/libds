@@ -11,16 +11,16 @@ extern "C" {
    void **ds_array_copy (void **src, size_t from_index, size_t to_index);
 
    size_t ds_array_length (void **ll);
-   const void *ds_array_index (void **ll, size_t i);
-   void ds_array_iterate (void **ll, void (*fptr) (const void *));
+   void *ds_array_index (void **ll, size_t i);
+   void ds_array_iterate (void **ll, void (*fptr) (void *));
 
-   const void *ds_array_ins_tail (void ***ll, const void *el);
-   const void *ds_array_ins_head (void ***ll, const void *el);
+   void *ds_array_ins_tail (void ***ll, void *el);
+   void *ds_array_ins_head (void ***ll, void *el);
 
-   const void *ds_array_remove_tail (void ***ll);
-   const void *ds_array_remove_head (void ***ll);
+   void *ds_array_remove_tail (void ***ll);
+   void *ds_array_remove_head (void ***ll);
 
-   const void *ds_array_remove (void ***ll, size_t index);
+   void *ds_array_remove (void ***ll, size_t index);
 
 #ifdef __cplusplus
 };

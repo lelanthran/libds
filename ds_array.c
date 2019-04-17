@@ -59,7 +59,7 @@ size_t ds_array_length (void **ll)
    return ret;
 }
 
-const void *ds_array_index (void **ll, size_t i)
+void *ds_array_index (void **ll, size_t i)
 {
    if (!ll)
       return NULL;
@@ -73,7 +73,7 @@ const void *ds_array_index (void **ll, size_t i)
    return NULL;
 }
 
-void ds_array_iterate (void **ll, void (*fptr) (const void *))
+void ds_array_iterate (void **ll, void (*fptr) (void *))
 {
    if (!ll || !fptr)
       return;
@@ -84,7 +84,7 @@ void ds_array_iterate (void **ll, void (*fptr) (const void *))
 }
 
 
-const void *ds_array_ins_tail (void ***ll, const void *el)
+void *ds_array_ins_tail (void ***ll, void *el)
 {
    size_t nitems = 0;
 
@@ -106,7 +106,7 @@ const void *ds_array_ins_tail (void ***ll, const void *el)
    return (*ll)[nitems];
 }
 
-const void *ds_array_ins_head (void ***ll, const void *el)
+void *ds_array_ins_head (void ***ll, void *el)
 {
    size_t nitems = 0;
 
@@ -129,7 +129,7 @@ const void *ds_array_ins_head (void ***ll, const void *el)
    return (*ll)[0];
 }
 
-const void *ds_array_remove_tail (void ***ll)
+void *ds_array_remove_tail (void ***ll)
 {
    if(!ll || !(*ll) || !(*ll)[0])
       return NULL;
@@ -146,13 +146,13 @@ const void *ds_array_remove_tail (void ***ll)
 
 }
 
-const void *ds_array_remove_head (void ***ll)
+void *ds_array_remove_head (void ***ll)
 {
    return ds_array_remove (ll, 0);
 }
 
 
-const void *ds_array_remove (void ***ll, size_t index)
+void *ds_array_remove (void ***ll, size_t index)
 {
    if (!ll || !*ll)
       return NULL;
