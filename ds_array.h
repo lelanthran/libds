@@ -1,6 +1,6 @@
 
-#ifndef H_DATASTRUCTURE_LL
-#define H_DATASTRUCTURE_LL
+#ifndef H_DS_LL
+#define H_DS_LL
 
 #ifdef __cplusplus
 extern "C" {
