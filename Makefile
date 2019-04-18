@@ -5,19 +5,23 @@
 
 BINPROGS=\
 	ds_array_test\
-	ds_str_test
+	ds_str_test\
+	ds_ll_test
 
 BINOBS=\
 	ds_array_test.o\
-	ds_str_test.o
+	ds_str_test.o\
+	ds_ll_test.o
 
 OBS=\
 	ds_array.o\
-	ds_str.o
+	ds_str.o\
+	ds_ll.o
 
 HEADERS=\
 	ds_array.h\
-	ds_str.h
+	ds_str.h\
+	ds_ll.h
 
 
 CC=gcc
