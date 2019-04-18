@@ -24,3 +24,14 @@ Functions for perfoming:
 2. String concatenation (with allocation) resulting in a new string,
 3. String appending to an existing string (with reallocation of existing
    string).
+
+## ds_ll
+A linked list implementation; in some cases it is preferable to have a
+linked list (fragmented memory) than an array (contiguous memory). This is
+a double-linked list to support traversal in both directions:
+1. Create a new node using `ds_ll_ins_after()` or `ds_ll_ins_before()` using `NULL` as the previous node or next node respectively. This results in a linked list of a single element.
+2. Use the same functions to add new nodes either before or after any known nodes.
+3. Use `ds_ll_ins_tail()` and `ds_ll_ins_head()` to add new nodes to the tail or the head of the list, respectively.
+4. Use `ds_ll_value()` to return the value (payload) of the node.  5. Use `ds_ll_first()`, `ds_ll_last()`, `ds_ll_next()` and `ds_ll_prev()` to return the first node, last node, next node or previous node respectively. For the `first` and `last` functions, you can pass in any node in the list and the function will traverse the list and return the first/last node as specified.
+6. Use the function `ds_ll_remove()` to remove a single node from the list.  This function will leave the rest of the list intact.
+7. Use the function `ds_ll_del()` to remove all nodes in the list. Any node in the list can be passed and the function will traverse the entire list from that node, removing all nodes in the list.
