@@ -19,11 +19,14 @@ These data structures are for small (in-memory) data. For large data use a libra
         }
 
 ## ds_str
-Functions for perfoming:
+Functions for performing:
 1. String copy (with allocation),
 2. String concatenation (with allocation) resulting in a new string,
 3. String appending to an existing string (with reallocation of existing
    string).
+4. Dynamic allocation printf; use printf and print into a buffer that is
+   allocated by the `ds_str_printf()` function to be large enough for the
+   entire string. The caller must free the allocated buffer.
 
 ## ds_ll
 A linked list implementation; in some cases it is preferable to have a
