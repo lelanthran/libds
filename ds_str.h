@@ -2,6 +2,8 @@
 #ifndef H_DS_STR
 #define H_DS_STR
 
+#include <stdarg.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -23,6 +25,12 @@ extern "C" {
    // NULL is returned on error.
    char *ds_strappend (char **dst, const char *s1, ...);
 
+   // Perform a printf into a buffer allocated on demand. The parameter
+   // '*dst' is allocated by this function and must be freed by the caller.
+   // On success the length of '*dst' is returned, on failure zero is
+   // returned.
+   size_t ds_strprintf (char **dst, const char *fmt, ...);
+   size_t ds_strvprintf (char **dst, const char *fmt, va_list ap);
 
 #ifdef __cplusplus
 };

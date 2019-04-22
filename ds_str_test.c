@@ -11,6 +11,7 @@ int main (void)
    char *test_append = NULL;
    char *test_cat = NULL;
    char *test_dup = ds_strdup ("Test String");
+   char *test_printf = NULL;
 
    if (!(test_dup)) {
       fprintf (stderr, "dup error\n");
@@ -36,9 +37,17 @@ int main (void)
       }
    }
 
-   printf ("test_dup: [%s]\n", test_dup);
-   printf ("test_cat: [%s]\n", test_cat);
-   printf ("test_append: [%s]\n", test_append);
+   float tmpflt = 10.0 / 3.0;
+   if (!(ds_strprintf (&test_printf, "[%s], %zu, %f, [%s]\n",
+                           "START", (size_t)-1, tmpflt, "END"))) {
+      fprintf (stderr, "printf: Failed\n");
+      goto errorexit;
+   }
+
+   printf ("test_dup:      [%s]\n", test_dup);
+   printf ("test_cat:      [%s]\n", test_cat);
+   printf ("test_append:   [%s]\n", test_append);
+   printf ("test_printf:   [%s]\n", test_printf);
 
    ret = EXIT_SUCCESS;
 
@@ -47,6 +56,7 @@ errorexit:
    free (test_dup);
    free (test_cat);
    free (test_append);
+   free (test_printf);
 
    return ret;
 }
