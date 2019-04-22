@@ -10,7 +10,7 @@ int main (void)
 
    char *test_append = NULL;
    char *test_cat = NULL;
-   char *test_dup = ds_strdup ("Test String");
+   char *test_dup = ds_str_dup ("Test String");
    char *test_printf = NULL;
 
    if (!(test_dup)) {
@@ -18,7 +18,7 @@ int main (void)
       goto errorexit;
    }
 
-   test_cat = ds_strcat (test_dup, " [dup data 1]", " [dup data 2]", NULL);
+   test_cat = ds_str_cat (test_dup, " [dup data 1]", " [dup data 2]", NULL);
    if (!test_cat) {
       fprintf (stderr, "cat error\n");
       goto errorexit;
@@ -32,13 +32,13 @@ int main (void)
    };
 
    for (size_t i=0; i<sizeof more1/sizeof more1[0]; i++) {
-      if (!(ds_strappend (&test_append, more1[i], more2[i], NULL))) {
+      if (!(ds_str_append (&test_append, more1[i], more2[i], NULL))) {
          fprintf (stderr, "append[%zu] failed\n", i);
       }
    }
 
    float tmpflt = 10.0 / 3.0;
-   if (!(ds_strprintf (&test_printf, "[%s], %zu, %f, [%s]\n",
+   if (!(ds_str_printf (&test_printf, "[%s], %zu, %f, [%s]\n",
                            "START", (size_t)-1, tmpflt, "END"))) {
       fprintf (stderr, "printf: Failed\n");
       goto errorexit;

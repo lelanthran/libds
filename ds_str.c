@@ -7,7 +7,7 @@
 
 #include "ds_str.h"
 
-char *ds_strdup (const char *src)
+char *ds_str_dup (const char *src)
 {
    if (!src)
       return NULL;
@@ -21,7 +21,7 @@ char *ds_strdup (const char *src)
    return strcpy (ret, src);
 }
 
-char *ds_strcat (const char *src, ...)
+char *ds_str_cat (const char *src, ...)
 {
    bool error = true;
    char *ret = NULL;
@@ -62,7 +62,7 @@ errorexit:
    return ret;
 }
 
-char *ds_strappend (char **dst, const char *s1, ...)
+char *ds_str_append (char **dst, const char *s1, ...)
 {
    bool error = true;
    char *ret = NULL;
@@ -71,16 +71,16 @@ char *ds_strappend (char **dst, const char *s1, ...)
    va_start (ap, s1);
 
    if (!(*dst))
-      (*dst) = ds_strdup ("");
+      (*dst) = ds_str_dup ("");
 
    if (!(*dst))
       return NULL;
 
-   if (!(ret = ds_strcat ((*dst), s1, NULL)))
+   if (!(ret = ds_str_cat ((*dst), s1, NULL)))
       goto errorexit;
 
    while ((s1 = va_arg (ap, char *))!=NULL) {
-      char *tmp = ds_strcat (ret, s1, NULL);
+      char *tmp = ds_str_cat (ret, s1, NULL);
       if (!tmp)
          goto errorexit;
 
@@ -105,7 +105,7 @@ errorexit:
    return ret;
 }
 
-size_t ds_strvprintf (char **dst, const char *fmt, va_list ap)
+size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap)
 {
    size_t ret = 0;
    size_t tmprc = 0;
@@ -136,12 +136,12 @@ size_t ds_strvprintf (char **dst, const char *fmt, va_list ap)
    return ret;
 }
 
-size_t ds_strprintf (char **dst, const char *fmt, ...)
+size_t ds_str_printf (char **dst, const char *fmt, ...)
 {
    va_list ap;
 
    va_start (ap, fmt);
-   size_t ret = ds_strvprintf (dst, fmt, ap);
+   size_t ret = ds_str_vprintf (dst, fmt, ap);
    va_end (ap);
 
    return ret;
