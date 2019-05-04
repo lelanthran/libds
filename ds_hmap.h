@@ -64,9 +64,9 @@ extern "C" {
    bool ds_hmap_get (ds_hmap_t *hm, const void *key,  size_t keylen,
                                     void **data,      size_t *datalen);
 
-   // Removes an item from the hsahmap. The data stored in the value field
+   // Removes an item from the hashmap. The data stored in the value field
    // still remains the responsibility of the caller.
-   void ds_hmap_remove (ds_hmap_t *hm, void *key, size_t keylen);
+   void ds_hmap_remove (ds_hmap_t *hm, const void *key, size_t keylen);
 
    // Allocates and returns arrays of all the keys and their respective
    // lengths in the arrays provided by the caller. On success, the length
@@ -131,6 +131,12 @@ static bool ds_hmap_get_str_str (ds_hmap_t *hm,
    return ds_hmap_get (hm, key,  strlen (key) + 1,
                            tmp,  &datalen);
 }
+
+static void ds_hmap_remove_str (ds_hmap_t *hm, const char *key)
+{
+   ds_hmap_remove (hm, key, strlen (key) + 1);
+}
+
 
 #endif
 

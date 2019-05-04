@@ -70,8 +70,17 @@ static bool small_test (void)
       { "Name...................18", "VALUE.............................18" },
    };
 
+   static const char *test_rm[] = {
+      "Name....................2",
+      "Name....................6",
+      "Name...................10",
+      "Name...................14",
+      "Name...................18",
+   };
+
    static const size_t ntests = sizeof tests / sizeof tests[0];
    static const size_t ntest_o = sizeof test_o / sizeof test_o[0];
+   static const size_t ntest_rm = sizeof test_rm / sizeof test_rm[0];
 
    const char **keys = NULL;
    size_t *keylens = NULL;
@@ -119,7 +128,7 @@ static bool small_test (void)
       printf ("%zu Found [%s:%s]\n", i, test_o[i].key, data);
    }
 
-   size_t nkeys = ds_hmap_keys (hm, &keys, &keylens);
+   size_t nkeys = ds_hmap_keys (hm, (void ***)&keys, &keylens);
    if (nkeys == (size_t)-1) {
       fprintf (stderr, "Failed to get the keys and key lengths\n");
       goto errorexit;
@@ -127,8 +136,54 @@ static bool small_test (void)
    for (size_t i=0; i<nkeys; i++) {
       printf ("%zu [%s:%zu]\n", i, keys[i], keylens[i]);
    }
+   free (keys);      keys = NULL;
+   free (keylens);   keylens = NULL;
 
-   print_stats (hm, "SMALL TEST");
+   print_stats (hm, "1. SMALL TEST");
+
+
+   printf ("******************* Removing elements ******************** \n");
+   for (size_t i=0; i<ntest_rm; i++) {
+      ds_hmap_remove_str (hm, test_rm[i]);
+   }
+   nkeys = ds_hmap_keys (hm, (void ***)&keys, &keylens);
+   if (nkeys == (size_t)-1) {
+      fprintf (stderr, "Failed to get the keys and key lengths\n");
+      goto errorexit;
+   }
+   for (size_t i=0; i<nkeys; i++) {
+      printf ("%zu [%s:%zu]\n", i, keys[i], keylens[i]);
+   }
+   free (keys);      keys = NULL;
+   free (keylens);   keylens = NULL;
+
+   print_stats (hm, "2. SMALL TEST");
+
+   for (size_t i=0; i<ntest_rm; i++) {
+      if (!(ds_hmap_set_str_str (hm, test_rm[i], "New Data"))) {
+         fprintf (stderr, "[%zu] Failed to set [%s:%s]\n", i,
+                                                           test_rm[i],
+                                                           "New Data");
+         goto errorexit;
+      }
+   }
+   printf ("******************* Removing complete ******************** \n");
+
+   nkeys = ds_hmap_keys (hm, (void ***)&keys, &keylens);
+   if (nkeys == (size_t)-1) {
+      fprintf (stderr, "Failed to get the keys and key lengths\n");
+      goto errorexit;
+   }
+   for (size_t i=0; i<nkeys; i++) {
+      const char *data;
+      if (!(ds_hmap_get_str_str (hm, keys[i], &data))) {
+         fprintf (stderr, "%zu Failed to get key [%s]\n",i, keys[i]);
+         goto errorexit;
+      }
+      printf ("%zu [%s:%s]\n", i, keys[i], data);
+   }
+   free (keys);      keys = NULL;
+   free (keylens);   keylens = NULL;
 
    error = false;
 

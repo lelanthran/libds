@@ -36,6 +36,7 @@ struct entry_t {
 typedef struct bucket_t bucket_t;
 struct bucket_t {
    size_t   nelems;
+   size_t   alen;
    entry_t *elems;
 };
 
@@ -44,8 +45,10 @@ static void bucket_clear (bucket_t *b)
    if (!b)
       return;
 
-   for (size_t i=0; i<b->nelems; i++) {
+   for (size_t i=0; i<b->alen; i++) {
       free (b->elems[i].key);
+      b->elems[i].key = NULL;
+      b->elems[i].keylen = 0;
    }
    free (b->elems);
    memset (b, 0, sizeof *b);
@@ -57,14 +60,16 @@ static entry_t *bucket_find_entry (bucket_t *b, const void *k, size_t klen)
       return NULL;
 
    if (!k) {
-      for (size_t i=0; i<b->nelems; i++) {
-         if (!b->elems[i].key)
+      for (size_t i=0; i<b->alen; i++) {
+         if (!b->elems[i].keylen)
             return &b->elems[i];
       }
       return NULL;
    }
 
-   for (size_t i=0; i<b->nelems; i++) {
+   for (size_t i=0; i<b->alen; i++) {
+      if (!b->elems[i].keylen)
+         continue;
       size_t mlen = klen < b->elems[i].keylen ? klen : b->elems[i].keylen;
       if ((memcmp (b->elems[i].key, k, mlen))==0)
          return &b->elems[i];
@@ -78,24 +83,25 @@ static entry_t *bucket_new_entry (bucket_t *b, const void *k, size_t klen,
 {
    entry_t *ret = NULL;
 
-   entry_t *tmp = realloc (b->elems, (b->nelems + 1) * (sizeof *tmp));
+   entry_t *tmp = realloc (b->elems, (b->alen + 1) * (sizeof *tmp));
    if (!tmp)
       return NULL;
 
    b->elems = tmp;
 
-   memset (&b->elems[b->nelems], 0, sizeof b->elems[b->nelems]);
+   memset (&b->elems[b->alen], 0, sizeof b->elems[b->alen]);
 
-   if (!(b->elems[b->nelems].key = malloc (klen)))
+   if (!(b->elems[b->alen].key = malloc (klen)))
       return NULL;
 
-   memcpy (b->elems[b->nelems].key, k, klen);
-   b->elems[b->nelems].keylen = klen;
-   b->elems[b->nelems].data = d;
-   b->elems[b->nelems].datalen = dlen;
+   memcpy (b->elems[b->alen].key, k, klen);
+   b->elems[b->alen].keylen = klen;
+   b->elems[b->alen].data = d;
+   b->elems[b->alen].datalen = dlen;
 
-   ret = &b->elems[b->nelems];
+   ret = &b->elems[b->alen];
 
+   b->alen++;
    b->nelems++;
 
    return ret;
@@ -111,6 +117,13 @@ static entry_t *bucket_set (bucket_t *b, const void *k, size_t klen,
    if (!e) {
       // Doesn't exist, try to find an empty entry
       e = bucket_find_entry (b, NULL, 0);
+      if (e) {
+         if (!(e->key = malloc (klen)))
+            return NULL;
+         memcpy (e->key, k, klen);
+         e->keylen = klen;
+         b->nelems++;
+      }
    }
 
    if (!e) {
@@ -273,6 +286,21 @@ errorexit:
    return !error;
 }
 
+void ds_hmap_remove (ds_hmap_t *hm, const void *key, size_t keylen)
+{
+   if (!hm || !key || !keylen)
+      return;
+
+   uint32_t hash = make_hash (key, keylen) % hm->nbuckets;
+   entry_t *e = bucket_find_entry (&hm->buckets[hash], key, keylen);
+   if (!e)
+      return;
+
+   free (e->key);
+   memset (e, 0, sizeof *e);
+   hm->buckets[hash].nelems--;
+}
+
 size_t ds_hmap_keys (ds_hmap_t *hm, void ***keys, size_t **keylens)
 {
    if (!hm)
@@ -292,7 +320,9 @@ size_t ds_hmap_keys (ds_hmap_t *hm, void ***keys, size_t **keylens)
 
    size_t index = 0;
    for (size_t i=0; i<hm->nbuckets; i++) {
-      for (size_t j=0; j<hm->buckets[i].nelems; j++) {
+      for (size_t j=0; j<hm->buckets[i].alen; j++) {
+         if (!hm->buckets[i].elems[j].keylen)
+            continue;
          k[index] = hm->buckets[i].elems[j].key;
          kl[index] = hm->buckets[i].elems[j].keylen;
          index++;
@@ -335,8 +365,9 @@ float ds_hmap_load (ds_hmap_t *hm)
    if (!hm)
       return 0.0;
 
-   float ret = ds_hmap_num_entries (hm) / ds_hmap_num_buckets (hm);
-   return ret;
+   float numer = ds_hmap_num_entries (hm);
+   float denom = ds_hmap_num_buckets (hm);
+   return numer / denom;
 }
 
 size_t ds_hmap_num_buckets (ds_hmap_t *hm)
