@@ -27,10 +27,13 @@ HEADERS=\
 	ds_ll.h\
 	ds_hmap.h
 
+ifndef GCC
+	GCC = gcc
+endif
 
-CC=gcc
+CC=$(GCC)
 CFLAGS=-W -Wall -c -std=c99 -pedantic
-LD=gcc
+LD=$(GCC)
 LDFLAGS=
 RM=rm -rfv
 
