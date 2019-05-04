@@ -5,6 +5,13 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define LOCAL_INLINE
+
+#ifdef __GNUC__
+#undef LOCAL_INLINE
+#define LOCAL_INLINE __inline__
+#endif
+
 /* Hashmap. Note that this data structure does not make copies of the
  * data it is given; instead it merely stores pointers to the data it is
  * given.
@@ -116,6 +123,7 @@ extern "C" {
 // The #ifndef above is to prevent these functions getting defined in the
 // implementation file ds_hmap.c
 
+LOCAL_INLINE
 static const char *ds_hmap_set_str_str (ds_hmap_t *hm,
                                         const char *key, const char *data)
 {
@@ -123,6 +131,7 @@ static const char *ds_hmap_set_str_str (ds_hmap_t *hm,
                            (void *)data, strlen (data) + 1);
 }
 
+LOCAL_INLINE
 static bool ds_hmap_get_str_str (ds_hmap_t *hm,
                                  const char *key, char **data)
 {
@@ -132,10 +141,33 @@ static bool ds_hmap_get_str_str (ds_hmap_t *hm,
                            tmp,  &datalen);
 }
 
+LOCAL_INLINE
 static void ds_hmap_remove_str (ds_hmap_t *hm, const char *key)
 {
    ds_hmap_remove (hm, key, strlen (key) + 1);
 }
+
+// TODO: Test this
+LOCAL_INLINE
+static const char *ds_hmap_set_str_ptr (ds_hmap_t *hm,
+                                        const char *key,
+                                        void *data, size_t datalen)
+{
+   return ds_hmap_set (hm, key,  strlen (key) + 1,
+                           data, datalen);
+}
+
+// TODO: Test this
+LOCAL_INLINE
+static bool ds_hmap_get_str_ptr (ds_hmap_t *hm,
+                                 const char *key,
+                                 void **data, size_t *datalen)
+{
+   void *tmp = data;
+   return ds_hmap_get (hm, key,  strlen (key) + 1,
+                           tmp,  datalen);
+}
+
 
 
 #endif

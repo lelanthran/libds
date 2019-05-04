@@ -175,7 +175,7 @@ static bool small_test (void)
       goto errorexit;
    }
    for (size_t i=0; i<nkeys; i++) {
-      const char *data;
+      char *data;
       if (!(ds_hmap_get_str_str (hm, keys[i], &data))) {
          fprintf (stderr, "%zu Failed to get key [%s]\n",i, keys[i]);
          goto errorexit;
