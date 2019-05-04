@@ -1,7 +1,12 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 
+#define DS_HMAP_IMPLEMENTATION
 #include "ds_hmap.h"
+#undef DS_HMAP_IMPLEMENTATION
+
 
 /* ******************************************************************
  * The data structure that stores each key/value pair.
@@ -24,87 +29,6 @@ struct entry_t {
    void    *data;
 };
 
-static void entry_del (entry_t *e)
-{
-   if (!e)
-      return;
-
-   free (e->key);
-
-   free (e);
-}
-
-static entry_t *entry_new (uint8_t flags, void *k, size_t klen,
-                                          void *d, size_t dlen)
-{
-   bool error = true;
-   entry_t *ret = NULL;
-
-   if (!(ret = malloc (sizeof *ret)))
-      goto errorexit;
-
-   memset (ret, 0, sizeof *ret);
-
-   ret->flags = flags;
-   ret->keylen = klen;
-   ret->datalen = dlen;
-
-   if (!(ret->key = malloc (klen)))
-      goto errorexit;
-
-   memcpy (ret->key, k, klen);
-
-   if (dlen <= sizeof ret->data) {
-      ret->data = d;
-   } else {
-      memcpy (&ret->data, d, dlen);
-   }
-
-   error = false;
-
-errorexit:
-
-   if (error) {
-      entry_del (ret);
-      ret = NULL;
-   }
-
-   return ret;
-}
-
-/*
-static entry_t *entry_reset (entry_t *e, uint8_t flags,
-                                         void *k, size_t klen,
-                                         void *d, size_t dlen)
-{
-   bool error = true;
-
-   if (!e || !d)
-      return NULL;
-
-   e->flags = flags;
-
-   free (e->key);
-   if (!(e->key = malloc (klen)))
-      goto errorexit;
-   memcpy (e->key, k, klen);
-
-   e->keylen = klen;
-   e->data = d;
-   e->datalen = dlen;
-
-   error = false;
-
-errorexit:
-   if (error) {
-      free (e->key);
-      memset (e, 0, sizeof *e);
-      return NULL;
-   }
-
-   return e;
-}
-*/
 
 /* ******************************************************************
  * The data structure that stores a collection of entry_t elements.
@@ -203,49 +127,15 @@ static entry_t *bucket_set (bucket_t *b, const void *k, size_t klen,
 /* ******************************************************************
  * The hashing functions
  */
-static uint8_t rtab[] = {
-   0x38, 0x1f, 0x65, 0x46, 0x24, 0x5f, 0x3e, 0x7d,
-   0x29, 0x22, 0x5a, 0x62, 0x23, 0x3a, 0x47, 0x4e,
-   0x20, 0x6c, 0x56, 0x4c, 0x7a, 0x7f, 0x40, 0xd9,
-   0xdd, 0x1e, 0x69, 0x72, 0x3c, 0x3c, 0x52, 0x4d,
-   0x14, 0xbc, 0x7a, 0x73, 0x23, 0x1a, 0x84, 0x53,
-   0x72, 0x27, 0x42, 0x41, 0x77, 0x3c, 0x7b, 0x37,
-   0x48, 0xdd, 0x20, 0x2f, 0x12, 0x35, 0x6f, 0x2d,
-   0x74, 0xb9, 0x27, 0x3f, 0x41, 0x4a, 0x4b, 0x3f,
-   0x28, 0x26, 0x54, 0x4d, 0x74, 0xdb, 0x32, 0x44,
-   0x22, 0x51, 0x19, 0x60, 0xe4, 0x1e, 0x3a, 0x2f,
-   0x27, 0x41, 0x59, 0x49, 0x2d, 0x15, 0xc4, 0x56,
-   0xa0, 0x7a, 0x6e, 0x22, 0x44, 0x4b, 0x53, 0x41,
-   0x16, 0xd3, 0x18, 0x5d, 0x3b, 0x46, 0x52, 0x11,
-   0x35, 0xfe, 0x56, 0x5c, 0x67, 0x4f, 0x57, 0x71,
-   0xcd, 0x30, 0x56, 0x19, 0x32, 0x14, 0x4b, 0x78,
-   0x7a, 0x45, 0x4f, 0x60, 0x3e, 0x65, 0x1a, 0x7e,
-   0xf2, 0x29, 0x11, 0x59, 0x61, 0x21, 0x67, 0x24,
-   0x4d, 0x29, 0x39, 0x39, 0x91, 0x57, 0x28, 0x31,
-   0x5a, 0x39, 0x4b, 0x10, 0x45, 0x3a, 0x7c, 0x1e,
-   0x38, 0x34, 0x5d, 0x16, 0x27, 0x3d, 0x78, 0x75,
-   0xc5, 0x13, 0x76, 0x23, 0x30, 0x55, 0x34, 0x3c,
-   0x25, 0x38, 0x62, 0xa5, 0x23, 0x59, 0xc3, 0x13,
-   0x96, 0x5a, 0x8e, 0x4f, 0x86, 0x31, 0x45, 0x26,
-   0x56, 0x43, 0x66, 0x7f, 0x25, 0x6a, 0x5d, 0x69,
-   0x32, 0x10, 0x1b, 0xcf, 0x72, 0x2c, 0x20, 0x6d,
-   0x70, 0x15, 0x63, 0x47, 0x2f, 0x75, 0x2b, 0x6e,
-   0x78, 0x59, 0x54, 0x3f, 0x71, 0x51, 0x50, 0x23,
-   0x6e, 0x62, 0x1f, 0x7d, 0x1a, 0x5a, 0x4c, 0x33,
-   0x1b, 0x58, 0x58, 0x69, 0x47, 0x49, 0xd1, 0x22,
-   0xf0, 0x4c, 0x96, 0x1a, 0x40, 0xde, 0x69, 0x68,
-   0x3a, 0x31, 0x2e, 0x58, 0x2a, 0x16, 0x28, 0x7e,
-   0x60, 0x13, 0x37, 0x47, 0x41, 0xe8, 0x74, 0x4c,
-};
-
 static size_t make_hash (const void *k, size_t klen)
 {
    const uint8_t *tmp = k;
    uint32_t ret = 0;
 
    for (size_t i=0; i<klen; i++) {
-      ret = (ret << 5) + ret;
-      ret = ret ^ rtab [*tmp++];
+      ret = (ret << 5);
+      ret = ret ^ *tmp;
+      tmp++;
    }
    return ret;
 }
@@ -382,4 +272,145 @@ errorexit:
 
    return !error;
 }
+
+size_t ds_hmap_keys (ds_hmap_t *hm, void ***keys, size_t **keylens)
+{
+   if (!hm)
+      return (size_t)-1;
+
+   bool error = true;
+
+   void **k = NULL;
+   size_t *kl = NULL;
+   size_t ret = ds_hmap_num_entries (hm);
+
+   k = malloc (sizeof *k * ret);
+   kl = malloc (sizeof *kl * ret);
+
+   if (!k || !kl)
+      goto errorexit;
+
+   size_t index = 0;
+   for (size_t i=0; i<hm->nbuckets; i++) {
+      for (size_t j=0; j<hm->buckets[i].nelems; j++) {
+         k[index] = hm->buckets[i].elems[j].key;
+         kl[index] = hm->buckets[i].elems[j].keylen;
+         index++;
+      }
+   }
+
+   if (keys) {
+      *keys = k;
+   } else {
+      free (k);
+      k = NULL;
+   }
+
+   if (keylens) {
+      *keylens = kl;
+   } else {
+      free (kl);
+      kl = NULL;
+   }
+
+   error = false;
+
+errorexit:
+
+   if (error) {
+      free (k);
+      free (kl);
+      ret = (size_t)-1;
+   }
+
+   return ret;
+}
+
+/* ******************************************************************
+ * The statistics functions
+ */
+
+float ds_hmap_load (ds_hmap_t *hm)
+{
+   if (!hm)
+      return 0.0;
+
+   float ret = ds_hmap_num_entries (hm) / ds_hmap_num_buckets (hm);
+   return ret;
+}
+
+size_t ds_hmap_num_buckets (ds_hmap_t *hm)
+{
+   return hm ? hm->nbuckets : 0;
+}
+
+size_t ds_hmap_num_entries (ds_hmap_t *hm)
+{
+   if (!hm)
+      return 0;
+
+   size_t sum = 0;
+   for (size_t i=0; i<hm->nbuckets; i++) {
+      sum += hm->buckets[i].nelems;
+   }
+
+   return sum;
+}
+
+size_t ds_hmap_mean_entries (ds_hmap_t *hm)
+{
+   if (!hm)
+      return 0;
+
+   return ds_hmap_num_entries (hm) / ds_hmap_num_buckets (hm);
+}
+
+float ds_hmap_stddev_entries (ds_hmap_t *hm)
+{
+   if (!hm)
+      return 0;
+
+   float avg = ds_hmap_load (hm);
+   float dev = 0.0;
+
+   for (size_t i=0; i<hm->nbuckets; i++) {
+      float diff = avg - hm->buckets[i].nelems;
+      dev += diff * diff;
+   }
+
+   float stddev = sqrtf (dev / hm->nbuckets);
+
+   return stddev;
+}
+
+size_t ds_hmap_min_entries (ds_hmap_t *hm)
+{
+   if (!hm)
+      return 0;
+
+   size_t ret = (size_t)-1;
+
+   for (size_t i=0; i<hm->nbuckets; i++) {
+      if (hm->buckets[i].nelems < ret)
+         ret = hm->buckets[i].nelems;
+   }
+   return ret;
+}
+
+size_t ds_hmap_max_entries (ds_hmap_t *hm)
+{
+   if (!hm)
+      return 0;
+
+   size_t ret = 0;
+
+   for (size_t i=0; i<hm->nbuckets; i++) {
+      // TODO: Remove this after testing.
+      printf ("%zu : %zu\n", i, hm->buckets[i].nelems);
+      if (hm->buckets[i].nelems > ret)
+         ret = hm->buckets[i].nelems;
+   }
+   return ret;
+}
+
 

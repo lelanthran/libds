@@ -68,6 +68,20 @@ extern "C" {
    // still remains the responsibility of the caller.
    void ds_hmap_remove (ds_hmap_t *hm, void *key, size_t keylen);
 
+   // Allocates and returns arrays of all the keys and their respective
+   // lengths in the arrays provided by the caller. On success, the length
+   // of these arrays are returned (both arrays have to be the same
+   // length). On error (size_t)-1 is returned.
+   //
+   // If 'keys' is not NULL then it is populated with an array of pointers
+   // to all the keys stored in the hashmap. If 'keylens' is not NULL then
+   // is it populated with an array of all the lengths of keys in the
+   // hashmap.
+   //
+   // The caller is responsible for freeing the array stored at 'keys' and
+   // the array stored at 'keylens' after this function returns. Note that
+   // only the array must be freed, and not each element of the array.
+   size_t ds_hmap_keys (ds_hmap_t *hm, void ***keys, size_t **keylens);
 
    /* These functions all return statistics about the hashmap */
 
@@ -84,7 +98,7 @@ extern "C" {
    size_t ds_hmap_mean_entries (ds_hmap_t *hm);
 
    // Return the std deviation of entries in a bucket
-   size_t ds_hmap_stddev_entries (ds_hmap_t *hm);
+   float ds_hmap_stddev_entries (ds_hmap_t *hm);
 
    // Return the min and the max number of entries in a bucket
    size_t ds_hmap_min_entries (ds_hmap_t *hm);
@@ -94,9 +108,13 @@ extern "C" {
 };
 #endif
 
+#ifndef DS_HMAP_IMPLEMENTATION
 // Hashmaps of <str,str> and <str,void *> are more common than others,
 // thus for convenience a few inline functions are provided that deal
 // specifically with these two common cases.
+//
+// The #ifndef above is to prevent these functions getting defined in the
+// implementation file ds_hmap.c
 
 static const char *ds_hmap_set_str_str (ds_hmap_t *hm,
                                         const char *key, const char *data)
@@ -114,5 +132,6 @@ static bool ds_hmap_get_str_str (ds_hmap_t *hm,
                            tmp,  &datalen);
 }
 
+#endif
 
 #endif

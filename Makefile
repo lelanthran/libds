@@ -34,7 +34,7 @@ endif
 CC=$(GCC)
 CFLAGS=-W -Wall -c -std=c99 -pedantic
 LD=$(GCC)
-LDFLAGS=
+LDFLAGS= -lm
 RM=rm -rfv
 
 debug:	CFLAGS+= -ggdb
@@ -46,7 +46,7 @@ release:	all
 all:	$(BINPROGS)
 
 $(BINPROGS):	$(BINOBS) $(OBS)
-	$(LD) $(LDFLAGS) -o $@ $@.o $(OBS)
+	$(LD) -o $@ $@.o $(OBS) $(LDFLAGS)
 
 %.o:	%.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ $<

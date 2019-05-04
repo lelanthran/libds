@@ -5,14 +5,13 @@
 
 #include "ds_hmap.h"
 
-/*
 static void print_stats (ds_hmap_t *hm, const char *msg)
 {
    float lf = ds_hmap_load (hm);
    size_t nbuckets = ds_hmap_num_buckets (hm);
    size_t nentries = ds_hmap_num_entries (hm);
    size_t mean_entries = ds_hmap_mean_entries (hm);
-   size_t stddev_entries = ds_hmap_stddev_entries (hm);
+   float stddev_entries = ds_hmap_stddev_entries (hm);
    size_t min_entries = ds_hmap_min_entries (hm);
    size_t max_entries = ds_hmap_max_entries (hm);
 
@@ -21,12 +20,11 @@ static void print_stats (ds_hmap_t *hm, const char *msg)
    printf ("Bucket count:                 %zu\n", nbuckets);
    printf ("Entry count:                  %zu\n", nentries);
    printf ("Avg entries/bucket:           %zu\n", mean_entries);
-   printf ("Std-dev entries/bucket:       %zu\n", stddev_entries);
+   printf ("Std-dev entries/bucket:       %.2f\n", stddev_entries);
    printf ("Min entries/bucket:           %zu\n", min_entries);
    printf ("Max entries/bucket:           %zu\n", max_entries);
    printf ("---------------------------------------------\n");
 }
-*/
 
 static bool small_test (void)
 {
@@ -57,7 +55,26 @@ static bool small_test (void)
       { "Name...................19", "Value.............................19" },
    };
 
+   static const struct {
+      const char *key;
+      const char *data;
+   } test_o[] = {
+      { "Name....................2", "VALUE..............................2" },
+      { "Name....................4", "VALUE..............................4" },
+      { "Name....................6", "VALUE..............................6" },
+      { "Name....................8", "VALUE..............................8" },
+      { "Name...................10", "VALUE.............................10" },
+      { "Name...................12", "VALUE.............................12" },
+      { "Name...................14", "VALUE.............................14" },
+      { "Name...................16", "VALUE.............................16" },
+      { "Name...................18", "VALUE.............................18" },
+   };
+
    static const size_t ntests = sizeof tests / sizeof tests[0];
+   static const size_t ntest_o = sizeof test_o / sizeof test_o[0];
+
+   const char **keys = NULL;
+   size_t *keylens = NULL;
 
    ds_hmap_t *hm = ds_hmap_new (19);
 
@@ -84,6 +101,35 @@ static bool small_test (void)
       printf ("%zu Found [%s:%s]\n", i, tests[i].key, data);
    }
 
+   for (size_t i=0; i<ntest_o; i++) {
+      if (!(ds_hmap_set_str_str (hm, test_o[i].key, test_o[i].data))) {
+         fprintf (stderr, "[%zu] Failed to set [%s:%s]\n", i,
+                                                           test_o[i].key,
+                                                           test_o[i].data);
+         goto errorexit;
+      }
+   }
+
+   for (size_t i=0; i<ntest_o; i+=2) {
+      char *data = NULL;
+      if (!(ds_hmap_get_str_str (hm, test_o[i].key, &data))) {
+         fprintf (stderr, "%zu Failed to get [%s]\n", i, test_o[i].key);
+         goto errorexit;
+      }
+      printf ("%zu Found [%s:%s]\n", i, test_o[i].key, data);
+   }
+
+   size_t nkeys = ds_hmap_keys (hm, &keys, &keylens);
+   if (nkeys == (size_t)-1) {
+      fprintf (stderr, "Failed to get the keys and key lengths\n");
+      goto errorexit;
+   }
+   for (size_t i=0; i<nkeys; i++) {
+      printf ("%zu [%s:%zu]\n", i, keys[i], keylens[i]);
+   }
+
+   print_stats (hm, "SMALL TEST");
+
    error = false;
 
 errorexit:
@@ -93,6 +139,9 @@ errorexit:
       ds_hmap_lasterr (hm, &errnum, &errmsg);
       fprintf (stderr, "Failed with err %i [%s]\n", errnum, errmsg);
    }
+
+   free (keys);
+   free (keylens);
 
    ds_hmap_del (hm);
 
