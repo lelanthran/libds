@@ -2,6 +2,9 @@
 #ifndef H_DS_HMAP
 #define H_DS_HMAP
 
+#include <string.h>
+#include <stdbool.h>
+
 /* Hashmap. Note that this data structure does not make copies of the
  * data it is given; instead it merely stores pointers to the data it is
  * given.
@@ -11,6 +14,12 @@
  *
  */
 
+typedef enum {
+   ds_hmap_ENONE     = 0,
+   ds_hmap_ENULLOBJ  = 1,
+   ds_hmap_EOOM      = 2,
+} ds_hmap_error_t;
+
 typedef struct ds_hmap_t ds_hmap_t;
 
 #ifdef __cplusplus
@@ -19,18 +28,16 @@ extern "C" {
 
    // Create a new hashmap. The nbuckets specify the number of buckets in
    // the hashmap. Returns NULL on eror, or a hashmap object on success.
-   ds_hmap_t *ds_hmap_new (uint16_t nbuckets);
+   ds_hmap_t *ds_hmap_new (size_t nbuckets);
 
    // Delete a a hashmap. The data being stored is *not* deleted. All
    // other resources associated with the hashmap is deleted.
-   ds_hmap_del (ds_hmap_t *hm);
-
-   // Returns the load factor of the hashmap.
-   float ds_hmap_load (ds_hmap_t *hm);
+   void ds_hmap_del (ds_hmap_t *hm);
 
    // Returns the last error that was recorded in this hashmap. The caller
    // must not free the error message returned.
-   void ds_hmap_lasterr (int *err, const char * const *ermmsg);
+   void ds_hmap_lasterr (ds_hmap_t *hm,
+                         ds_hmap_error_t *err, const char **errmsg);
 
    // Set an item in the hashmap. If this key already exists then the data
    // that is mapped to this key is replaced with the new data specified
@@ -39,23 +46,73 @@ extern "C" {
    // The data is not copied (the caller is still responsible for it) but
    // the key is copied (the caller may free the key after this function
    // returns).
-   void *ds_hmap_set (ds_hmap_t *hm, void *key,  size_t keylen,
-                                     void *data, size_t datalen);
+   //
+   // On error NULL is returned. On success a pointer to the key is
+   // returned.
+   const void *ds_hmap_set (ds_hmap_t *hm, const void *key,  size_t keylen,
+                                           void *data, size_t datalen);
 
    // Finds an item in the hashmap and returns the data associated with
-   // it. The 'data' is allocated and must be freed by the caller. The
-   // length of the data is stored in 'datalen'.
+   // it. The 'data' is NOT allocated; it is the raw pointer that was
+   // passed by the caller during the _set() operation.
    //
-   // If the key is found *AND* the data is successfully copied into an
-   // allocated buffer, then true is returned, otherwise false is returned
-   // and the caller must call _lasterr() to determine what went wrong.
+   // If the key is found then the 'data' and 'datalen' parameters are
+   // populated with a pointer to the data and the length of the data, and
+   // true is returned.
+   // If the key is not found then the values of 'data' and 'datalen' are
+   // indeterminate and false is returned.
    bool ds_hmap_get (ds_hmap_t *hm, const void *key,  size_t keylen,
                                     void **data,      size_t *datalen);
 
+   // Removes an item from the hsahmap. The data stored in the value field
+   // still remains the responsibility of the caller.
    void ds_hmap_remove (ds_hmap_t *hm, void *key, size_t keylen);
+
+
+   /* These functions all return statistics about the hashmap */
+
+   // Return the load factor of the hashmap.
+   float ds_hmap_load (ds_hmap_t *hm);
+
+   // Return the bucket size of the hashmap
+   size_t ds_hmap_num_buckets (ds_hmap_t *hm);
+
+   // Return the number of entries in the hashmap
+   size_t ds_hmap_num_entries (ds_hmap_t *hm);
+
+   // Return the mean number of entries in a bucket
+   size_t ds_hmap_mean_entries (ds_hmap_t *hm);
+
+   // Return the std deviation of entries in a bucket
+   size_t ds_hmap_stddev_entries (ds_hmap_t *hm);
+
+   // Return the min and the max number of entries in a bucket
+   size_t ds_hmap_min_entries (ds_hmap_t *hm);
+   size_t ds_hmap_max_entries (ds_hmap_t *hm);
 
 #ifdef __cplusplus
 };
 #endif
+
+// Hashmaps of <str,str> and <str,void *> are more common than others,
+// thus for convenience a few inline functions are provided that deal
+// specifically with these two common cases.
+
+static const char *ds_hmap_set_str_str (ds_hmap_t *hm,
+                                        const char *key, const char *data)
+{
+   return ds_hmap_set (hm, key,  strlen (key) + 1,
+                           (void *)data, strlen (data) + 1);
+}
+
+static bool ds_hmap_get_str_str (ds_hmap_t *hm,
+                                 const char *key, char **data)
+{
+   size_t datalen;
+   void *tmp = data;
+   return ds_hmap_get (hm, key,  strlen (key) + 1,
+                           tmp,  &datalen);
+}
+
 
 #endif
