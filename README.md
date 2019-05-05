@@ -29,8 +29,8 @@ and free those data objects when needed.
 
 ## Useful string functions - ds_str
 Functions for performing:
-1. String copy (with allocation),
-2. String concatenation (with allocation) resulting in a new string,
+1. String copy (with allocation).
+2. String concatenation (with allocation) resulting in a new string.
 3. String appending to an existing string (with reallocation of existing
    string).
 4. Dynamic allocation printf; use printf and print into a buffer that is
@@ -130,7 +130,7 @@ wasted is only around ~1.3X of the data used.
 
 ### Coming soon
 #### Rehashing / Changing the number of buckets
-This is currently not possible. Added more buckets means that the keys now
+This is currently not possible. Adding more buckets means that the keys now
 hash to different values and that the whole hashmap must be rehashed with
 a new hash being calculated for every entry.
 
