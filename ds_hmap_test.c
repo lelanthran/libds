@@ -14,6 +14,7 @@ static void print_stats (ds_hmap_t *hm, const char *msg)
    float stddev_entries = ds_hmap_stddev_entries (hm);
    size_t min_entries = ds_hmap_min_entries (hm);
    size_t max_entries = ds_hmap_max_entries (hm);
+   size_t range_entries = ds_hmap_range_entries (hm);
 
    printf ("[%s]\n", msg);
    printf ("Load factor:                  %.2f\n", lf);
@@ -23,6 +24,8 @@ static void print_stats (ds_hmap_t *hm, const char *msg)
    printf ("Std-dev entries/bucket:       %.2f\n", stddev_entries);
    printf ("Min entries/bucket:           %zu\n", min_entries);
    printf ("Max entries/bucket:           %zu\n", max_entries);
+   printf ("Range entries/bucket:         %zu\n", range_entries);
+   ds_hmap_print_freq (hm, stdout);
    printf ("---------------------------------------------\n");
 }
 
@@ -85,7 +88,7 @@ static bool small_test (void)
    const char **keys = NULL;
    size_t *keylens = NULL;
 
-   ds_hmap_t *hm = ds_hmap_new (19);
+   ds_hmap_t *hm = ds_hmap_new (15);
 
    if (!hm) {
       fprintf (stderr, "Failed to create hashmap\n");

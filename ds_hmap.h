@@ -25,6 +25,8 @@ typedef enum {
    ds_hmap_ENONE     = 0,
    ds_hmap_ENULLOBJ  = 1,
    ds_hmap_EOOM      = 2,
+   ds_hmap_ENOTFOUND = 3,
+   ds_hmap_EBADPARAM = 4,
 } ds_hmap_error_t;
 
 typedef struct ds_hmap_t ds_hmap_t;
@@ -107,9 +109,12 @@ extern "C" {
    // Return the std deviation of entries in a bucket
    float ds_hmap_stddev_entries (ds_hmap_t *hm);
 
-   // Return the min and the max number of entries in a bucket
+   // Return the min, max and range number of entries in a bucket
    size_t ds_hmap_min_entries (ds_hmap_t *hm);
    size_t ds_hmap_max_entries (ds_hmap_t *hm);
+   size_t ds_hmap_range_entries (ds_hmap_t *hm);
+
+   void ds_hmap_print_freq (ds_hmap_t *hm, FILE *outf);
 
 #ifdef __cplusplus
 };
