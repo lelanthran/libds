@@ -65,7 +65,7 @@ _(Note - In this section, a type of `string` means a `char *` that is
 nul-terminated and compatible with all of the string functions in the
 standard `C` library)._
 
-# Overview
+### Overview
 The caller will always give the hashmap two elements of data - a `key` and
 a `value` associated with that `key`. Of these two elements of data passed
 to the hashmap:
@@ -83,7 +83,7 @@ object, as long as the new instance compares the same, but we __do__ care
 to get the same instance of `data_object` that was stored, not a copy of
 it!
 
-# Convenience functions
+### Convenience functions
 This hashmap implementation stores variable-length keys associated with
 variable-length data. Due to the generality of the storage, the interface
 requires a pointer _as well as_ a length indicator for both keys and data.
@@ -104,7 +104,7 @@ A few convenience functions exist for storing common hashes of
       Get a hash using a key of type `string` returning value of a
       size-indicated buffer.
 
-# Bucket length
+### Bucket length
 When creating the hashmap with `ds_hmap_new()`, specify a number of
 buckets that is approximately 75% as large as the number of elements you
 may want to store. For example, if you expect to store 100 elements, use a
@@ -128,3 +128,24 @@ a non-trival `class` or `struct`, they will take up at least 4.5Kb by
 themselves, so even though you over-specified by 4X, the space being
 wasted is only around ~1.3X of the data used.
 
+### Coming soon
+#### Rehashing / Changing the number of buckets
+This is currently not possible. Added more buckets means that the keys now
+hash to different values and that the whole hashmap must be rehashed with
+a new hash being calculated for every entry.
+
+Hopefully I will have time in the future to add in a function that creates
+a new hashmap with a larger bucket number, then inserts every `{key, value}`
+element from the existing hashmap into the new one and finally deletes the
+old one. This will be the only way to increase the number of buckets in
+the hashmap.
+
+#### Shrinking the hashmap / removing elements
+Currently the `ds_hmap_remove()` function does not reclaim the space used
+by the `{key, value}` element that is being removed. All that happens is
+that the element is marked as deleted, and is reused whenever possible.
+In an active hashmap, when items are often removed and other items are
+often added, most of the removed elements are simply reused.
+
+If time permits, I will add a function that reclaims all the space being
+used by elements that were removed and not reused.
