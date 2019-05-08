@@ -183,6 +183,9 @@ static size_t make_hash (const void *k, size_t klen)
       ret = ret ^ *tmp ^ rtab[*tmp];
       tmp++;
    }
+
+   // This did not make a significant difference to the collision rate.
+   // ret *= 2654435761;
    return ret;
 }
 
@@ -505,7 +508,7 @@ size_t ds_hmap_range_entries (ds_hmap_t *hm)
    return ds_hmap_max_entries (hm) - ds_hmap_min_entries (hm);
 }
 
-void ds_hmap_print_freq (ds_hmap_t *hm, FILE *outf)
+void ds_hmap_print_freq (ds_hmap_t *hm, const char *marker, FILE *outf)
 {
    if (!hm)
       return;
@@ -514,7 +517,7 @@ void ds_hmap_print_freq (ds_hmap_t *hm, FILE *outf)
       outf = stdout;
 
    for (size_t i=0; i<hm->nbuckets; i++) {
-      fprintf (outf, "%zu : %zu\n", i, hm->buckets[i].nelems);
+      fprintf (outf, "%s:%zu : %zu\n", marker, i, hm->buckets[i].nelems);
    }
 }
 

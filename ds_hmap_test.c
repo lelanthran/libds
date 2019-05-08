@@ -20,7 +20,7 @@ static void print_stats (ds_hmap_t *hm, const char *msg)
 
    printf ("[%s]\n", msg);
 
-   ds_hmap_print_freq (hm, stdout);
+   ds_hmap_print_freq (hm, msg, stdout);
 
    printf ("Load factor:                  %.2f\n", lf);
    printf ("Bucket count:                 %zu\n", nbuckets);
@@ -232,11 +232,14 @@ static bool large_test (void)
             fprintf (stderr, "Failed to dup string [%s]\n", string);
             goto errorexit;
          }
+         if (!string) {
+            continue;
+         }
          if (!(ds_hmap_set_str_str (hm, string, string))) {
             fprintf (stderr, "Failed to set string [%s]\n", string);
             goto errorexit;
          }
-         fprintf (stderr, "Added [%s]\n", string);
+         // fprintf (stderr, "Added [%s]\n", string);
          free (string);
          string = NULL;
          continue;
@@ -250,7 +253,7 @@ static bool large_test (void)
       }
    }
 
-   print_stats (hm, "Large test: results\n");
+   print_stats (hm, "Large test: results");
    error = false;
 
 errorexit:

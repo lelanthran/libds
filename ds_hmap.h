@@ -114,7 +114,7 @@ extern "C" {
    size_t ds_hmap_max_entries (ds_hmap_t *hm);
    size_t ds_hmap_range_entries (ds_hmap_t *hm);
 
-   void ds_hmap_print_freq (ds_hmap_t *hm, FILE *outf);
+   void ds_hmap_print_freq (ds_hmap_t *hm, const char *marker, FILE *outf);
 
 #ifdef __cplusplus
 };
