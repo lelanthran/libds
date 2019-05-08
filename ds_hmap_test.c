@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <ctype.h>
 
+#include "ds_str.h"
 #include "ds_hmap.h"
 
 static void print_stats (ds_hmap_t *hm, const char *msg)
@@ -17,6 +19,9 @@ static void print_stats (ds_hmap_t *hm, const char *msg)
    size_t range_entries = ds_hmap_range_entries (hm);
 
    printf ("[%s]\n", msg);
+
+   ds_hmap_print_freq (hm, stdout);
+
    printf ("Load factor:                  %.2f\n", lf);
    printf ("Bucket count:                 %zu\n", nbuckets);
    printf ("Entry count:                  %zu\n", nentries);
@@ -25,7 +30,6 @@ static void print_stats (ds_hmap_t *hm, const char *msg)
    printf ("Min entries/bucket:           %zu\n", min_entries);
    printf ("Max entries/bucket:           %zu\n", max_entries);
    printf ("Range entries/bucket:         %zu\n", range_entries);
-   ds_hmap_print_freq (hm, stdout);
    printf ("---------------------------------------------\n");
 }
 
@@ -206,6 +210,57 @@ errorexit:
    return !error;
 }
 
+static bool large_test (void)
+{
+   bool error = true;
+
+   char *string = NULL;
+   ds_hmap_t *hm = NULL;
+
+   if (!(hm = ds_hmap_new (32000))) {
+      fprintf (stderr, "Failed to allocate hashmap of 32k entries\n");
+      goto errorexit;
+   }
+
+   printf ("Waiting for input from stdin\n");
+
+   int c = 0;
+   while (!feof (stdin) && !ferror (stdin) && (c = fgetc (stdin))!=EOF) {
+      char *tmp = NULL;
+      if (isspace (c)) {
+         if (string && !(tmp = ds_str_dup (string))) {
+            fprintf (stderr, "Failed to dup string [%s]\n", string);
+            goto errorexit;
+         }
+         if (!(ds_hmap_set_str_str (hm, string, string))) {
+            fprintf (stderr, "Failed to set string [%s]\n", string);
+            goto errorexit;
+         }
+         fprintf (stderr, "Added [%s]\n", string);
+         free (string);
+         string = NULL;
+         continue;
+      }
+      char st[2];
+      st[0] = (char)c;
+      st[1] = 0;
+      if (!(ds_str_append (&string, st, NULL))) {
+         fprintf (stderr, "Out of memory allocating string\n");
+         goto errorexit;
+      }
+   }
+
+   print_stats (hm, "Large test: results\n");
+   error = false;
+
+errorexit:
+
+   ds_hmap_del (hm);
+   free (string);
+
+   return !error;
+}
+
 int main (void)
 {
    int ret = EXIT_FAILURE;
@@ -213,6 +268,11 @@ int main (void)
 
    if (!(small_test ())) {
       fprintf (stderr, "Failed small test\n");
+      goto errorexit;
+   }
+
+   if (!(large_test ())) {
+      fprintf (stderr, "Failed large test\n");
       goto errorexit;
    }
 
