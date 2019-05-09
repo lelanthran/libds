@@ -66,6 +66,10 @@ BINPROGS=\
 
 DYNLIB=$(OUTLIB)/libds-$(VERSION)$(LIB_EXT)
 STCLIB=$(OUTLIB)/libds-$(VERSION).a
+DYNLNK_TARGET=libds-$(VERSION)$(LIB_EXT)
+STCLNK_TARGET=libds-$(VERSION).a
+DYNLNK_NAME=$(OUTLIB)/libds$(LIB_EXT)
+STCLNK_NAME=$(OUTLIB)/libds.a
 
 
 # ######################################################################
@@ -134,6 +138,8 @@ real-all:	real-show  $(DYNLIB) $(STCLIB) $(BINPROGS)
 all:	real-all
 	mkdir -p include
 	cp -Rv $(HEADERS) include
+	ln -s $(STCLNK_TARGET) $(STCLNK_NAME)
+	ln -s $(DYNLNK_TARGET) $(DYNLNK_NAME)
 
 real-show:	$(OUTDIRS)
 	@echo "EXE_EXT:      $(EXE_EXT)"
@@ -174,7 +180,7 @@ $(DYNLIB):	$(OBS)
 	$(LD) -shared $^ -o $@ $(LDFLAGS)
 
 $(STCLIB):	$(OBS)
-	$(AR) $(ARFLAGS) $@ $(OBS)
+	$(AR) $(ARFLAGS) $@ $^
 
 $(OUTDIRS):
 	mkdir -p $@
