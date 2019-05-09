@@ -140,6 +140,9 @@ release:	all
 real-help:
 	@echo "Possible targets:"
 	@echo "help:                This message."
+	@echo "show:                Display all the variable values that will be"
+	@echo "                     used during execution. Also 'show debug' or"
+	@echo "                     'show release' works."
 	@echo "debug:               Build debug binaries."
 	@echo "release:             Build release binaries."
 	@echo "clean-debug:         Clean a debug build (debug is ignored)."
