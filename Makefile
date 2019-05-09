@@ -52,5 +52,5 @@ $(BINPROGS):	$(BINOBS) $(OBS)
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	$(RM) $(BINOBS) $(BINPROGS)
+	$(RM) $(BINOBS) $(BINPROGS) $(OBS)
 
