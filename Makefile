@@ -189,7 +189,7 @@ real-show:	$(OUTDIRS)
 	@echo "PWD:          $(PWD)"
 
 show:	real-show
-	@echo "Only target show selected, ending now."
+	@echo "Only target 'show' selected, ending now."
 	@false
 
 $(BINOBS) $(OBS):	$(OUTOBS)/%.o:	src/%.c $(HEADERS)
