@@ -157,7 +157,6 @@ all:	real-all
 real-show:	$(OUTDIRS)
 	@echo "EXE_EXT:      $(EXE_EXT)"
 	@echo "LIB_EXT:      $(LIB_EXT)"
-	@echo "BINPROGS:     $(BINPROGS)"
 	@echo "DYNLIB:       $(DYNLIB)"
 	@echo "STCLIB:       $(STCLIB)"
 	@echo "CC:           $(CC)"
@@ -167,20 +166,28 @@ real-show:	$(OUTDIRS)
 	@echo "LD:           $(LD)"
 	@echo "LDFLAGS:      $(LDFLAGS)"
 	@echo "AR:           $(AR)"
+	@echo "ARFLAGS:      $(ARFLAGS)"
 	@echo ""
 	@echo "PLATFORM:     $(PLATFORM)"
 	@echo "TARGET:       $(TARGET)"
 	@echo "OUTBIN:       $(OUTBIN)"
 	@echo "OUTLIB:       $(OUTLIB)"
 	@echo "OUTOBS:       $(OUTOBS)"
-	@echo "OUTDIRS:      $(OUTDIRS)"
-	@echo "HEADERS:      $(HEADERS)"
-	@echo "OBS:          $(OBS)"
-	@echo "BINOBS:       $(BINOBS)"
+	@echo "OUTDIRS:      "
+	@for X in $(OUTDIRS); do echo "              $$X"; done
+	@echo "HEADERS:      "
+	@for X in $(HEADERS); do echo "              $$X"; done
+	@echo "OBS:          "
+	@for X in $(OBS); do echo "              $$X"; done
+	@echo "BINOBS:       "
+	@for X in $(BINOBS); do echo "              $$X"; done
+	@echo "BINPROGS:     "
+	@for X in $(BINPROGS); do echo "              $$X"; done
 	@echo "PWD:          $(PWD)"
 
 show:	real-show
-	false
+	@echo "Only target show selected, ending now."
+	@false
 
 $(BINOBS) $(OBS):	$(OUTOBS)/%.o:	src/%.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ $<
