@@ -119,10 +119,13 @@ AR=ar
 ARFLAGS= rcs
 
 
-.PHONY:	show real-show debug release veryclean
+.PHONY:	help real-help show real-show debug release veryclean
 
 # ######################################################################
 # All the conditional targets
+
+help: real-help
+
 debug:	CFLAGS+= -ggdb
 debug:	CXXFLAGS+= -ggdb
 debug:	all
@@ -133,13 +136,23 @@ release:	all
 
 # ######################################################################
 # Finally, build the system
+
+real-help:
+	@echo "Possible targets:"
+	@echo "help:                This message."
+	@echo "debug:               Build debug binaries."
+	@echo "release:             Build release binaries."
+	@echo "clean-debug:         Clean a debug build (debug is ignored)."
+	@echo "clean-release:       Clean a release build (release is ignored)."
+	@echo "veryclean:           Clean everything."
+
 real-all:	real-show  $(DYNLIB) $(STCLIB) $(BINPROGS)
 
 all:	real-all
 	mkdir -p include
 	cp -Rv $(HEADERS) include
-	ln -s $(STCLNK_TARGET) $(STCLNK_NAME)
-	ln -s $(DYNLNK_TARGET) $(DYNLNK_NAME)
+	ln -f -s $(STCLNK_TARGET) $(STCLNK_NAME)
+	ln -f -s $(DYNLNK_TARGET) $(DYNLNK_NAME)
 
 real-show:	$(OUTDIRS)
 	@echo "EXE_EXT:      $(EXE_EXT)"
