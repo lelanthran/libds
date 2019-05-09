@@ -115,7 +115,7 @@ AR=ar
 ARFLAGS= rcs
 
 
-.PHONY:	show debug release veryclean
+.PHONY:	show real-show debug release veryclean
 
 # ######################################################################
 # All the conditional targets
@@ -129,13 +129,13 @@ release:	all
 
 # ######################################################################
 # Finally, build the system
-real-all:	show  $(DYNLIB) $(STCLIB) $(BINPROGS)
+real-all:	real-show  $(DYNLIB) $(STCLIB) $(BINPROGS)
 
 all:	real-all
 	mkdir -p include
 	cp -Rv $(HEADERS) include
 
-show:	$(OUTDIRS)
+real-show:	$(OUTDIRS)
 	@echo "EXE_EXT:      $(EXE_EXT)"
 	@echo "LIB_EXT:      $(LIB_EXT)"
 	@echo "BINPROGS:     $(BINPROGS)"
@@ -160,6 +160,8 @@ show:	$(OUTDIRS)
 	@echo "BINOBS:       $(BINOBS)"
 	@echo "PWD:          $(PWD)"
 
+show:	real-show
+	false
 
 $(BINOBS) $(OBS):	$(OUTOBS)/%.o:	src/%.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ $<
