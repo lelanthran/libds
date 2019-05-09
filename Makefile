@@ -38,7 +38,15 @@ endif
 # ######################################################################
 # Set the output directories, output filenames
 
+OUTDIR=debug
+
+ifneq (,$(findstring debug,$(MAKECMDGOALS)))
+OUTDIR=debug
+endif
+
+ifneq (,$(findstring release,$(MAKECMDGOALS)))
 OUTDIR=release
+endif
 
 VERSION=0.0.1
 TARGET=$(shell $(GCC) -dumpmachine)
@@ -46,7 +54,6 @@ OUTLIB=$(OUTDIR)/lib/$(TARGET)
 OUTBIN=$(OUTDIR)/bin/$(TARGET)
 OUTOBS=$(OUTDIR)/obs/$(TARGET)
 OUTDIRS=$(OUTLIB) $(OUTBIN) $(OUTOBS)
-
 
 
 # ######################################################################
@@ -57,11 +64,8 @@ BINPROGS=\
 	$(OUTBIN)/ds_ll_test$(EXE_EXT)\
 	$(OUTBIN)/ds_hmap_test$(EXE_EXT)
 
-RELEASE_LIB=$(OUTLIB)/libds-$(VERSION)$(LIB_EXT)
-
-# TODO: Fix this so that the correct output is chosen. Also need to
-# generate static libs as well.
-LIB=$(OUTLIB)/libds-$(VERSION)$(LIB_EXT)
+DYNLIB=$(OUTLIB)/libds-$(VERSION)$(LIB_EXT)
+STCLIB=$(OUTLIB)/libds-$(VERSION).a
 
 
 # ######################################################################
@@ -108,25 +112,24 @@ CXXFLAGS=$(COMMONFLAGS)
 LD=$(GCC)
 LDFLAGS= -lm
 AR=ar
+ARFLAGS= rcs
 
 
-.PHONY:	show debug release
+.PHONY:	show debug release veryclean
 
 # ######################################################################
 # All the conditional targets
-debug:	LIB=$(DEBUG_LIB)
 debug:	CFLAGS+= -ggdb
 debug:	CXXFLAGS+= -ggdb
 debug:	all
 
-release:	LIB=$(RELEASE_LIB)
 release:	CFLAGS+= -O3
 release:	CXXFLAGS+= -O3
 release:	all
 
 # ######################################################################
 # Finally, build the system
-real-all:	show  $(LIB) $(BINPROGS)
+real-all:	show  $(DYNLIB) $(STCLIB) $(BINPROGS)
 
 all:	real-all
 	mkdir -p include
@@ -136,7 +139,8 @@ show:	$(OUTDIRS)
 	@echo "EXE_EXT:      $(EXE_EXT)"
 	@echo "LIB_EXT:      $(LIB_EXT)"
 	@echo "BINPROGS:     $(BINPROGS)"
-	@echo "LIB:          $(LIB)"
+	@echo "DYNLIB:       $(DYNLIB)"
+	@echo "STCLIB:       $(STCLIB)"
 	@echo "CC:           $(CC)"
 	@echo "CXX:          $(CXX)"
 	@echo "CFLAGS:       $(CFLAGS)"
@@ -164,15 +168,24 @@ $(BINOBS) $(OBS):	$(OUTOBS)/%.o:	src/%.c $(HEADERS)
 $(BINPROGS):	$(OUTBIN)/%.elf:	$(OUTOBS)/%.o $(OBS) $(OUTDIRS)
 	$(LD) $(OBS) $< -o $@ $(LDFLAGS)
 
-$(LIB):	$(OBS)
+$(DYNLIB):	$(OBS)
 	$(LD) -shared $^ -o $@ $(LDFLAGS)
+
+$(STCLIB):	$(OBS)
+	$(AR) $(ARFLAGS) $@ $(OBS)
 
 $(OUTDIRS):
 	mkdir -p $@
 
-clean:
-	rm -rfv $(BINOBS) $(OBS)
+clean-release:
+	rm -rfv release
 
-veryclean:
-	rm -rfv $(OUTDIRS) lib bin obs include
+clean-debug:
+	rm -rfv debug
+
+veryclean:	clean-release clean-debug
+
+
+clean:
+	echo Choose either clean-release or clean-debug
 
