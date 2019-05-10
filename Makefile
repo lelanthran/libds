@@ -15,6 +15,7 @@ ifneq ($(MAKEPROGRAM_EXE),)
 	PLATFORM=Windows
 	EXE_EXT=.exe
 	LIB_EXT=.dll
+	PLATFORM_LDFLAGS=-lmingw32 -lws2_32 -lmsvcrt -lgcc
 endif
 
 ifneq ($(MAKEPROGRAM_MINGW),)
@@ -23,6 +24,7 @@ ifneq ($(MAKEPROGRAM_MINGW),)
 	PLATFORM=Windows
 	EXE_EXT=.exe
 	LIB_EXT=.dll
+	PLATFORM_LDFLAGS=-lmingw32 -lws2_32 -lmsvcrt -lgcc
 endif
 
 # If neither of the above are true then we assume a working POSIX
@@ -114,7 +116,7 @@ COMMONFLAGS=\
 CFLAGS=$(COMMONFLAGS)
 CXXFLAGS=$(COMMONFLAGS)
 LD=$(GCC)
-LDFLAGS= -lm
+LDFLAGS= -lm $(PLATFORM_LDFLAGS)
 AR=ar
 ARFLAGS= rcs
 
@@ -196,8 +198,11 @@ $(BINOBS) $(OBS):	$(OUTOBS)/%.o:	src/%.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ $<
 
 
-$(BINPROGS):	$(OUTBIN)/%.elf:	$(OUTOBS)/%.o $(OBS) $(OUTDIRS)
-	$(LD) $(OBS) $< -o $@ $(LDFLAGS)
+$(OUTBIN)/%.exe:	$(OUTOBS)/%.o $(OBS) $(OUTDIRS)
+	$(LD) $< $(OBS) -o $@ $(LDFLAGS)
+
+$(OUTBIN)/%.elf:	$(OUTOBS)/%.o $(OBS) $(OUTDIRS)
+	$(LD) $< $(OBS) -o $@ $(LDFLAGS)
 
 $(DYNLIB):	$(OBS)
 	$(LD) -shared $^ -o $@ $(LDFLAGS)
