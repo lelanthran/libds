@@ -5,13 +5,16 @@
 
 MAKEPROGRAM_EXE=$(findstring exe,$(MAKE))
 MAKEPROGRAM_MINGW=$(findstring mingw,$(MAKE))
+GITSHELL=$(findstring Git,$(SHELL))
+GITSHELL+=$(findstring git,$(SHELL))
 
 # TODO: Remember that freebsd might use not gmake/gnu-make; must add in
 # some diagnostics so that user gets a message to install gnu make.
 
 ifneq ($(MAKEPROGRAM_EXE),)
-	# We are running on Windows for certain - not sure if cygwin or not
-	# TODO: Issue a diagnostic and stop if git bash shell is not found
+ifeq ($(strip $(GITSHELL)),)
+$(error On windows this must be executed from the Git bash shell)
+endif
 	PLATFORM=Windows
 	EXE_EXT=.exe
 	LIB_EXT=.dll
@@ -19,8 +22,9 @@ ifneq ($(MAKEPROGRAM_EXE),)
 endif
 
 ifneq ($(MAKEPROGRAM_MINGW),)
-	# We are running on Windows/Mingw, no uncertainty about build system
-	# TODO: Issue a diagnostic and stop if git bash shell is not found
+ifeq ($(strip $(GITSHELL)),)
+$(error On windows this must be executed from the Git bash shell)
+endif
 	PLATFORM=Windows
 	EXE_EXT=.exe
 	LIB_EXT=.dll
@@ -160,6 +164,7 @@ all:	real-all
 	ln -f -s $(DYNLNK_TARGET) $(DYNLNK_NAME)
 
 real-show:	$(OUTDIRS)
+	@echo "SHELL:        $(GITSHELL)"
 	@echo "EXE_EXT:      $(EXE_EXT)"
 	@echo "LIB_EXT:      $(LIB_EXT)"
 	@echo "DYNLIB:       $(DYNLIB)"
