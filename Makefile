@@ -54,7 +54,7 @@ ifneq (,$(findstring release,$(MAKECMDGOALS)))
 OUTDIR=release
 endif
 
-VERSION=0.0.1
+VERSION=1.0.0
 TARGET=$(shell $(GCC) -dumpmachine)
 OUTLIB=$(OUTDIR)/lib/$(TARGET)
 OUTBIN=$(OUTDIR)/bin/$(TARGET)
@@ -114,7 +114,7 @@ CC=$(GCC)
 CXX=$(GXX)
 
 COMMONFLAGS=\
-	-W -Wall -c -fPIC -Iinclude\
+	-W -Wall -c -fPIC \
 	-DPLATFORM=$(PLATFORM) -DPLATFORM_$(PLATFORM)
 
 CFLAGS=$(COMMONFLAGS) -std=c99
