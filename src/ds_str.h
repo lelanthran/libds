@@ -16,6 +16,7 @@ extern "C" {
    // NULL) into a single string that is returned which the caller must
    // free. NULL is returned on error
    char *ds_str_cat (const char *src, ...);
+   char *ds_str_vcat (const char *src, va_list ap);
 
    // Append all the strings given in '...' (ending with a NULL) to
    // parameter '(*dst)'. Parameter '(*dst)' is reallocated as necessary
@@ -24,6 +25,7 @@ extern "C" {
    //
    // NULL is returned on error.
    char *ds_str_append (char **dst, const char *s1, ...);
+   char *ds_str_vappend (char **dst, const char *s1, va_list ap);
 
    // Perform a printf into a buffer allocated on demand. The parameter
    // '*dst' is allocated by this function and must be freed by the caller.
