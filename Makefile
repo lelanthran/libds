@@ -54,7 +54,7 @@ ifneq (,$(findstring release,$(MAKECMDGOALS)))
 OUTDIR=release
 endif
 
-VERSION=1.0.0
+VERSION=1.0.1
 TARGET=$(shell $(GCC) -dumpmachine)
 OUTLIB=$(OUTDIR)/lib/$(TARGET)
 OUTBIN=$(OUTDIR)/bin/$(TARGET)
@@ -125,7 +125,7 @@ AR=ar
 ARFLAGS= rcs
 
 
-.PHONY:	help real-help show real-show debug release veryclean
+.PHONY:	help real-help show real-show debug release clean-all
 
 # ######################################################################
 # All the conditional targets
@@ -153,7 +153,7 @@ real-help:
 	@echo "release:             Build release binaries."
 	@echo "clean-debug:         Clean a debug build (debug is ignored)."
 	@echo "clean-release:       Clean a release build (release is ignored)."
-	@echo "veryclean:           Clean everything."
+	@echo "clean-all:           Clean everything."
 
 real-all:	real-show  $(DYNLIB) $(STCLIB) $(BINPROGS)
 
@@ -224,7 +224,7 @@ clean-release:
 clean-debug:
 	rm -rfv debug
 
-veryclean:	clean-release clean-debug
+clean-all:	clean-release clean-debug
 
 
 clean:

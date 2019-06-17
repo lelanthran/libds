@@ -21,28 +21,27 @@ char *ds_str_dup (const char *src)
    return strcpy (ret, src);
 }
 
-char *ds_str_cat (const char *src, ...)
+char *ds_str_vcat (const char *src, va_list ap)
 {
    bool error = true;
    char *ret = NULL;
    const char *tmp = src;
    size_t nbytes = 0;
-   va_list ap;
-   va_start (ap, src);
+   va_list apc;
+
+   va_copy (apc, ap);
 
    while (tmp) {
       nbytes += strlen (tmp);
-      tmp = va_arg (ap, const char *);
+      tmp = va_arg (apc, const char *);
    }
 
-   va_end (ap);
+   va_end (apc);
 
    if (!(ret = malloc (nbytes + 1)))
       goto errorexit;
 
    *ret = 0;
-
-   va_start (ap, src);
 
    tmp = src;
    while (tmp) {
@@ -62,13 +61,22 @@ errorexit:
    return ret;
 }
 
-char *ds_str_append (char **dst, const char *s1, ...)
+char *ds_str_cat (const char *src, ...)
+{
+   va_list ap;
+
+   va_start (ap, src);
+   char *ret = ds_str_vcat (src, ap);
+   va_end (ap);
+
+   return ret;
+}
+
+char *ds_str_vappend (char **dst, const char *s1, va_list ap)
 {
    bool error = true;
    char *ret = NULL;
-   va_list ap;
 
-   va_start (ap, s1);
 
    if (!(*dst))
       (*dst) = ds_str_dup ("");
@@ -88,8 +96,6 @@ char *ds_str_append (char **dst, const char *s1, ...)
       ret = tmp;
    }
 
-   va_end (ap);
-
    free (*dst);
    (*dst) = ret;
 
@@ -101,6 +107,17 @@ errorexit:
       free (ret);
       ret = NULL;
    }
+
+   return ret;
+}
+
+char *ds_str_append (char **dst, const char *s1, ...)
+{
+   va_list ap;
+
+   va_start (ap, s1);
+   char *ret = ds_str_vappend (dst, s1, ap);
+   va_end (ap);
 
    return ret;
 }
