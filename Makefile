@@ -54,7 +54,7 @@ ifneq (,$(findstring release,$(MAKECMDGOALS)))
 OUTDIR=release
 endif
 
-VERSION=1.0.1
+VERSION=1.0.2
 TARGET=$(shell $(GCC) -dumpmachine)
 OUTLIB=$(OUTDIR)/lib/$(TARGET)
 OUTBIN=$(OUTDIR)/bin/$(TARGET)
