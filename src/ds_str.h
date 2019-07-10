@@ -38,8 +38,14 @@ extern "C" {
    // Perform a character substitution on the source string. The caller
    // must free the returned value. NULL is returned on error.
    //
-   // All occurrences of 'oldc' will be replaced with 'newc'.
-   char *ds_str_chsubst (const char *src, char oldc, char newc);
+   // All occurrences of 'oldc' will be replaced with 'newc'. Thereafter
+   // every two arguments will be interpreted as a new {oldc,newc} pair
+   // until oldc is 0.
+   //
+   // Note that although oldc and newc are both of type int, they are cast
+   // to char before usage.
+   char *ds_str_chsubst (const char *src, int oldc, int newc, ...);
+   char *ds_str_vchsubst (const char *src, int oldc, int newc, va_list ap);
 
 #ifdef __cplusplus
 };

@@ -45,7 +45,9 @@ int main (void)
       goto errorexit;
    }
 
-   if (!(test_chsubst = ds_str_chsubst (test_cat, 'a', 'A'))) {
+   if (!(test_chsubst = ds_str_chsubst (test_cat, 'a', 'A',
+                                                  'd', 'D',
+                                                  0))) {
       fprintf (stderr, "char substitution failed\n");
       goto errorexit;
    }

@@ -164,16 +164,32 @@ size_t ds_str_printf (char **dst, const char *fmt, ...)
    return ret;
 }
 
-char *ds_str_chsubst (const char *src, char oldc, char newc)
+char *ds_str_vchsubst (const char *src, int oldc, int newc, va_list ap)
 {
    char *ret = ds_str_dup (src);
    if (!ret)
       return NULL;
 
-   char *tmp = ret;
-   while ((tmp = strchr (tmp, oldc))) {
-      *tmp++ = newc;
+   while (oldc) {
+      char *tmp = ret;
+      while ((tmp = strchr (tmp, (char)oldc))) {
+         *tmp++ = (char)newc;
+      }
+      oldc = va_arg (ap, int);
+      if (oldc)
+         newc = va_arg (ap, int);
    }
+   return ret;
+}
+
+char *ds_str_chsubst (const char *src, int oldc, int newc, ...)
+{
+   va_list ap;
+
+   va_start (ap, newc);
+   char *ret = ds_str_vchsubst (src, oldc, newc, ap);
+   va_end (ap);
+
    return ret;
 }
 
