@@ -10,6 +10,7 @@ int main (void)
 
    char *test_append = NULL;
    char *test_cat = NULL;
+   char *test_chsubst = NULL;
    char *test_dup = ds_str_dup ("Test String");
    char *test_printf = NULL;
 
@@ -44,8 +45,14 @@ int main (void)
       goto errorexit;
    }
 
+   if (!(test_chsubst = ds_str_chsubst (test_cat, 'a', 'A'))) {
+      fprintf (stderr, "char substitution failed\n");
+      goto errorexit;
+   }
+
    printf ("test_dup:      [%s]\n", test_dup);
    printf ("test_cat:      [%s]\n", test_cat);
+   printf ("test_chsubst:  [%s]\n", test_chsubst);
    printf ("test_append:   [%s]\n", test_append);
    printf ("test_printf:   [%s]\n", test_printf);
 
@@ -55,6 +62,7 @@ errorexit:
 
    free (test_dup);
    free (test_cat);
+   free (test_chsubst);
    free (test_append);
    free (test_printf);
 

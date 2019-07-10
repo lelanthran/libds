@@ -164,3 +164,16 @@ size_t ds_str_printf (char **dst, const char *fmt, ...)
    return ret;
 }
 
+char *ds_str_chsubst (const char *src, char oldc, char newc)
+{
+   char *ret = ds_str_dup (src);
+   if (!ret)
+      return NULL;
+
+   char *tmp = ret;
+   while ((tmp = strchr (tmp, oldc))) {
+      *tmp++ = newc;
+   }
+   return ret;
+}
+

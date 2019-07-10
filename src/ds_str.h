@@ -3,6 +3,7 @@
 #define H_DS_STR
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +34,12 @@ extern "C" {
    // returned.
    size_t ds_str_printf (char **dst, const char *fmt, ...);
    size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap);
+
+   // Perform a character substitution on the source string. The caller
+   // must free the returned value. NULL is returned on error.
+   //
+   // All occurrences of 'oldc' will be replaced with 'newc'.
+   char *ds_str_chsubst (const char *src, char oldc, char newc);
 
 #ifdef __cplusplus
 };
