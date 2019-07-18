@@ -1,2 +1,4 @@
 # v1.0.2 - ???
 
+1. Added a ds_str_chsubst function for substituting characters in a string.
+
