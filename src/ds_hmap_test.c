@@ -136,7 +136,7 @@ static bool small_test (void)
    }
 
    size_t nkeys = ds_hmap_keys (hm, (void ***)&keys, &keylens);
-   if (nkeys == (size_t)-1) {
+   if (nkeys == 0) {
       fprintf (stderr, "Failed to get the keys and key lengths\n");
       goto errorexit;
    }
@@ -154,7 +154,7 @@ static bool small_test (void)
       ds_hmap_remove_str (hm, test_rm[i]);
    }
    nkeys = ds_hmap_keys (hm, (void ***)&keys, &keylens);
-   if (nkeys == (size_t)-1) {
+   if (nkeys == 0) {
       fprintf (stderr, "Failed to get the keys and key lengths\n");
       goto errorexit;
    }
@@ -177,7 +177,7 @@ static bool small_test (void)
    printf ("******************* Removing complete ******************** \n");
 
    nkeys = ds_hmap_keys (hm, (void ***)&keys, &keylens);
-   if (nkeys == (size_t)-1) {
+   if (nkeys == 0) {
       fprintf (stderr, "Failed to get the keys and key lengths\n");
       goto errorexit;
    }
@@ -226,12 +226,7 @@ static bool large_test (void)
 
    int c = 0;
    while (!feof (stdin) && !ferror (stdin) && (c = fgetc (stdin))!=EOF) {
-      char *tmp = NULL;
       if (isspace (c)) {
-         if (string && !(tmp = ds_str_dup (string))) {
-            fprintf (stderr, "Failed to dup string [%s]\n", string);
-            goto errorexit;
-         }
          if (!string) {
             continue;
          }

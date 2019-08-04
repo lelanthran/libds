@@ -2,6 +2,7 @@
 #ifndef H_DS_HMAP
 #define H_DS_HMAP
 
+#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 
@@ -36,7 +37,7 @@ extern "C" {
 #endif
 
    // Create a new hashmap. The nbuckets specify the number of buckets in
-   // the hashmap. Returns NULL on eror, or a hashmap object on success.
+   // the hashmap. Returns NULL on error, or a hashmap object on success.
    ds_hmap_t *ds_hmap_new (size_t nbuckets);
 
    // Delete a a hashmap. The data being stored is *not* deleted. All
@@ -80,7 +81,7 @@ extern "C" {
    // Allocates and returns arrays of all the keys and their respective
    // lengths in the arrays provided by the caller. On success, the length
    // of these arrays are returned (both arrays have to be the same
-   // length). On error (size_t)-1 is returned.
+   // length). On error zero is returned.
    //
    // If 'keys' is not NULL then it is populated with an array of pointers
    // to all the keys stored in the hashmap. If 'keylens' is not NULL then
