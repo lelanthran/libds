@@ -190,6 +190,9 @@ char *ds_str_ltrim (char *src)
    size_t begin = 0;
    size_t slen = strlen (src);
 
+   if (!slen)
+      return src;
+
    while ((src[begin]) && (isspace (src[begin]))) {
       begin++;
    }
@@ -208,6 +211,9 @@ char *ds_str_rtrim (char *src)
 
    size_t slen = strlen (src);
    size_t end = slen - 1;
+
+   if (!slen)
+      return src;
 
    while (end!=0 && isspace (src[end])) {
       src[end--] = 0;
