@@ -249,7 +249,7 @@ static const char *find_errmsg (ds_hmap_error_t code)
       { ds_hmap_ENONE,       "Success"             },
       { ds_hmap_ENULLOBJ,    "Null Object"         },
       { ds_hmap_EOOM,        "Out of memory"       },
-      { ds_hmap_ENOTFOUND,   "Object nout found"   },
+      { ds_hmap_ENOTFOUND,   "Object not found"    },
       { ds_hmap_EBADPARAM,   "Invalid parameter"   },
    };
 

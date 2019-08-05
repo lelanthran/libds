@@ -35,6 +35,16 @@ extern "C" {
    size_t ds_str_printf (char **dst, const char *fmt, ...);
    size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap);
 
+   // Trim the leading, the trailing or both the leading and the trailing
+   // whitespace from the specified string. The operations are performed
+   // in-place on the string provided.
+   //
+   // A pointer to the string is always returned - no errors are possible.
+   // If the input is NULL then the return value is NULL as well.
+   char *ds_str_ltrim (char *src);
+   char *ds_str_rtrim (char *src);
+   char *ds_str_trim (char *src);
+
    // Perform a character substitution on the source string. The caller
    // must free the returned value. NULL is returned on error.
    //

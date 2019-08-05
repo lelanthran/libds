@@ -182,6 +182,49 @@ char *ds_str_vchsubst (const char *src, int oldc, int newc, va_list ap)
    return ret;
 }
 
+char *ds_str_ltrim (char *src)
+{
+   if (!src)
+      return NULL;
+
+   size_t begin = 0;
+   size_t slen = strlen (src);
+
+   while ((src[begin]) && (isspace (src[begin]))) {
+      begin++;
+   }
+   if (!src[begin]) {
+      src[0] = 0;
+   }
+
+   memmove (&src[0], &src[begin], slen - begin);
+   return src;
+}
+
+char *ds_str_rtrim (char *src)
+{
+   if (!src)
+      return NULL;
+
+   size_t slen = strlen (src);
+   size_t end = slen - 1;
+
+   while (end!=0 && isspace (src[end])) {
+      src[end--] = 0;
+   }
+   if (end==0 && isspace (src[0])) {
+      src[0] = 0;
+   }
+
+   return src;
+}
+
+char *ds_str_trim (char *src)
+{
+   return ds_str_rtrim (ds_str_ltrim (src));
+}
+
+
 char *ds_str_chsubst (const char *src, int oldc, int newc, ...)
 {
    va_list ap;

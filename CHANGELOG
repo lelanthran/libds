@@ -1,6 +1,7 @@
 # v1.0.2 - ???
 Additions
-1. Added a ds_str_chsubst function for substituting characters in a string.
+1. Added a ds_str_chsubst() function for substituting characters in a string.
+2. Added ds_str_trim() functions for removing leading and trailing whitespace.
 
 Bugfixes
 1. ds_hmap_keys() now returns zero on error.

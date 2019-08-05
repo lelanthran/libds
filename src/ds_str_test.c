@@ -14,6 +14,14 @@ int main (void)
    char *test_dup = ds_str_dup ("Test String");
    char *test_printf = NULL;
 
+   char *test_rtrim = NULL;
+   char *test_ltrim = NULL;
+   char *test_trim = NULL;
+
+   char *test_ertrim = NULL;
+   char *test_eltrim = NULL;
+   char *test_etrim = NULL;
+
    if (!(test_dup)) {
       fprintf (stderr, "dup error\n");
       goto errorexit;
@@ -52,11 +60,41 @@ int main (void)
       goto errorexit;
    }
 
+   test_rtrim = ds_str_dup ("   \n   Testing the rtrim function   \n   ");
+   test_ltrim = ds_str_dup ("   \n   Testing the ltrim function   \n   ");
+   test_trim = ds_str_dup ("   \n   Testing the trim function   \n   ");
+   test_ertrim = ds_str_dup ("   \n   ");
+   test_eltrim = ds_str_dup ("   \n   ");
+   test_etrim = ds_str_dup ("  \n   ");
+
+   if (!test_rtrim || !test_ltrim || !test_trim) {
+      fprintf (stderr, "Failed to allocate test strings for trim functions\n");
+      goto errorexit;
+   }
+
+   ds_str_rtrim (test_rtrim);
+   ds_str_ltrim (test_ltrim);
+   ds_str_trim (test_trim);
+
+   ds_str_rtrim (test_ertrim);
+   ds_str_ltrim (test_eltrim);
+   ds_str_trim (test_etrim);
+
+   /* ******************************************************************* */
+
    printf ("test_dup:      [%s]\n", test_dup);
    printf ("test_cat:      [%s]\n", test_cat);
    printf ("test_chsubst:  [%s]\n", test_chsubst);
    printf ("test_append:   [%s]\n", test_append);
    printf ("test_printf:   [%s]\n", test_printf);
+
+   printf ("test_rtrim:    [%s]\n", test_rtrim);
+   printf ("test_ltrim:    [%s]\n", test_ltrim);
+   printf ("test_trim:     [%s]\n", test_trim);
+
+   printf ("test_ertrim:    [%s]\n", test_ertrim);
+   printf ("test_eltrim:    [%s]\n", test_eltrim);
+   printf ("test_etrim:     [%s]\n", test_etrim);
 
    ret = EXIT_SUCCESS;
 
@@ -67,6 +105,14 @@ errorexit:
    free (test_chsubst);
    free (test_append);
    free (test_printf);
+
+   free (test_rtrim);
+   free (test_ltrim);
+   free (test_trim);
+
+   free (test_ertrim);
+   free (test_eltrim);
+   free (test_etrim);
 
    return ret;
 }
