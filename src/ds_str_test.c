@@ -101,7 +101,7 @@ int main (void)
          "Quite a long FOUR string too. ONE also testing ONE multiple "
          "ONE replacements TWO in the TWO string",
                "ONE",   "one",         // Replacement pair
-               "TWO",   "two"          // Replacement pair
+               "TWO",   "two",         // Replacement pair
                "THREE", "three",       // Replacement pair
                "FOUR",  "four",        // Replacement pair
          NULL);
@@ -146,6 +146,8 @@ errorexit:
    free (test_ertrim);
    free (test_eltrim);
    free (test_etrim);
+
+   free (test_strsubst);
 
    return ret;
 }

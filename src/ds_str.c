@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "ds_str.h"
 
@@ -263,9 +264,81 @@ char *ds_str_strsubst (const char *src,
    return ret;
 }
 
+static char *ds_str_subst1 (char *src, const char *olds, const char *news)
+{
+   bool error = true;
+   char *ret = NULL;
+
+   size_t olds_len = strlen (olds);
+   char *tmp = NULL;
+   char *startstr = src;
+
+   while ((tmp = strstr (startstr, olds))) {
+
+      *tmp++ = 0;
+
+      if (!(ds_str_append (&ret, startstr, news, NULL))) {
+         goto errorexit;
+      }
+
+      tmp += olds_len - 1;
+      startstr = tmp;
+   }
+
+   if (!(ds_str_append (&ret, startstr, NULL))) {
+      goto errorexit;
+   }
+
+   error = false;
+
+errorexit:
+   if (error) {
+      free (ret);
+      ret = NULL;
+   }
+
+   return ret;
+}
+
 char *ds_str_vstrsubst (const char *src,
                         const char *olds, const char *news, va_list ap)
 {
-   return NULL;
+   bool error = true;
+   char *ret = NULL;
+   char *tmpsrc = NULL;
+
+   error = false;
+
+   if (!(ret = ds_str_dup (src)))
+      goto errorexit;
+
+   while (olds) {
+
+      char *tmp = ds_str_subst1 (ret, olds, news);
+      if (!tmp)
+         goto errorexit;
+
+      free (ret);
+      ret = tmp;
+
+      if ((olds = va_arg (ap, const char *))) {
+         if (!(news = va_arg (ap, const char *))) {
+            break;
+         }
+      }
+   }
+
+   error = false;
+
+errorexit:
+
+   free (tmpsrc);
+
+   if (error) {
+      free (ret);
+      ret = NULL;
+   }
+
+   return ret;
 }
 
