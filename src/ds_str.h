@@ -57,6 +57,18 @@ extern "C" {
    char *ds_str_chsubst (const char *src, int oldc, int newc, ...);
    char *ds_str_vchsubst (const char *src, int oldc, int newc, va_list ap);
 
+
+   // Perform a string substitution on the source string. The caller must
+   // free the returned value. NULL is returned on error.
+   //
+   // All occurrences of 'olds' will be replaced by 'news'. Thereafter,
+   // every two arguments will be interpreted as a pair of {olds,news} and
+   // substitutions continue until an instance of NULL is read for 'olds'.
+   char *ds_str_strsubst (const char *src,
+                          const char *olds, const char *news, ...);
+   char *ds_str_vstrsubst (const char *src,
+                           const char *olds, const char *news, va_list ap);
+
 #ifdef __cplusplus
 };
 #endif

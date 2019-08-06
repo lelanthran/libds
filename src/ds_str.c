@@ -7,6 +7,8 @@
 
 #include "ds_str.h"
 
+/* ******************************************************************** */
+
 char *ds_str_dup (const char *src)
 {
    if (!src)
@@ -20,6 +22,8 @@ char *ds_str_dup (const char *src)
 
    return strcpy (ret, src);
 }
+
+/* ******************************************************************** */
 
 char *ds_str_vcat (const char *src, va_list ap)
 {
@@ -122,6 +126,8 @@ char *ds_str_append (char **dst, const char *s1, ...)
    return ret;
 }
 
+/* ******************************************************************** */
+
 size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap)
 {
    size_t ret = 0;
@@ -164,23 +170,7 @@ size_t ds_str_printf (char **dst, const char *fmt, ...)
    return ret;
 }
 
-char *ds_str_vchsubst (const char *src, int oldc, int newc, va_list ap)
-{
-   char *ret = ds_str_dup (src);
-   if (!ret)
-      return NULL;
-
-   while (oldc) {
-      char *tmp = ret;
-      while ((tmp = strchr (tmp, (char)oldc))) {
-         *tmp++ = (char)newc;
-      }
-      oldc = va_arg (ap, int);
-      if (oldc)
-         newc = va_arg (ap, int);
-   }
-   return ret;
-}
+/* ******************************************************************** */
 
 char *ds_str_ltrim (char *src)
 {
@@ -230,6 +220,25 @@ char *ds_str_trim (char *src)
    return ds_str_rtrim (ds_str_ltrim (src));
 }
 
+/* ******************************************************************** */
+
+char *ds_str_vchsubst (const char *src, int oldc, int newc, va_list ap)
+{
+   char *ret = ds_str_dup (src);
+   if (!ret)
+      return NULL;
+
+   while (oldc) {
+      char *tmp = ret;
+      while ((tmp = strchr (tmp, (char)oldc))) {
+         *tmp++ = (char)newc;
+      }
+      oldc = va_arg (ap, int);
+      if (oldc)
+         newc = va_arg (ap, int);
+   }
+   return ret;
+}
 
 char *ds_str_chsubst (const char *src, int oldc, int newc, ...)
 {
@@ -240,5 +249,23 @@ char *ds_str_chsubst (const char *src, int oldc, int newc, ...)
    va_end (ap);
 
    return ret;
+}
+
+char *ds_str_strsubst (const char *src,
+                       const char *olds, const char *news, ...)
+{
+   va_list ap;
+
+   va_start (ap, news);
+   char *ret = ds_str_vstrsubst (src, olds, news, ap);
+   va_end (ap);
+
+   return ret;
+}
+
+char *ds_str_vstrsubst (const char *src,
+                        const char *olds, const char *news, va_list ap)
+{
+   return NULL;
 }
 

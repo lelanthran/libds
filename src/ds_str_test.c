@@ -22,16 +22,24 @@ int main (void)
    char *test_eltrim = NULL;
    char *test_etrim = NULL;
 
+   char *test_strsubst = NULL;
+
+   /* ******************************************************************* */
+
    if (!(test_dup)) {
       fprintf (stderr, "dup error\n");
       goto errorexit;
    }
+
+   /* ******************************************************************* */
 
    test_cat = ds_str_cat (test_dup, " [dup data 1]", " [dup data 2]", NULL);
    if (!test_cat) {
       fprintf (stderr, "cat error\n");
       goto errorexit;
    }
+
+   /* ******************************************************************* */
 
    const char *more1[] = {
       "one ", "two ", "three "
@@ -46,6 +54,8 @@ int main (void)
       }
    }
 
+   /* ******************************************************************* */
+
    float tmpflt = 10.0 / 3.0;
    if (!(ds_str_printf (&test_printf, "[%s], %zu, %f, [%s]\n",
                            "START", (size_t)-1, tmpflt, "END"))) {
@@ -53,12 +63,16 @@ int main (void)
       goto errorexit;
    }
 
+   /* ******************************************************************* */
+
    if (!(test_chsubst = ds_str_chsubst (test_cat, 'a', 'A',
                                                   'd', 'D',
                                                   0))) {
       fprintf (stderr, "char substitution failed\n");
       goto errorexit;
    }
+
+   /* ******************************************************************* */
 
    test_rtrim = ds_str_dup ("   \n   Testing the rtrim function   \n   ");
    test_ltrim = ds_str_dup ("   \n   Testing the ltrim function   \n   ");
@@ -82,6 +96,23 @@ int main (void)
 
    /* ******************************************************************* */
 
+   test_strsubst = ds_str_strsubst (
+         "The Source String ONE with replacements everyTWOwhere. THREE "
+         "Quite a long FOUR string too. ONE also testing ONE multiple "
+         "ONE replacements TWO in the TWO string",
+               "ONE",   "one",         // Replacement pair
+               "TWO",   "two"          // Replacement pair
+               "THREE", "three",       // Replacement pair
+               "FOUR",  "four",        // Replacement pair
+         NULL);
+
+   if (!test_strsubst) {
+      fprintf (stderr, "Failure: str_subst()\n");
+      goto errorexit;
+   }
+
+   /* ******************************************************************* */
+
    printf ("test_dup:      [%s]\n", test_dup);
    printf ("test_cat:      [%s]\n", test_cat);
    printf ("test_chsubst:  [%s]\n", test_chsubst);
@@ -92,9 +123,11 @@ int main (void)
    printf ("test_ltrim:    [%s]\n", test_ltrim);
    printf ("test_trim:     [%s]\n", test_trim);
 
-   printf ("test_ertrim:    [%s]\n", test_ertrim);
-   printf ("test_eltrim:    [%s]\n", test_eltrim);
-   printf ("test_etrim:     [%s]\n", test_etrim);
+   printf ("test_ertrim:   [%s]\n", test_ertrim);
+   printf ("test_eltrim:   [%s]\n", test_eltrim);
+   printf ("test_etrim:    [%s]\n", test_etrim);
+
+   printf ("test_strsubst: [%s]\n", test_strsubst);
 
    ret = EXIT_SUCCESS;
 
