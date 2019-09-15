@@ -6,4 +6,5 @@ Additions
 
 Bugfixes
 1. ds_hmap_keys() now returns zero on error.
-
+2. Changed the build system to use the one with the pretty colors. As a bonus
+   there is now a build.config file to edit if things need to ever be changed.
