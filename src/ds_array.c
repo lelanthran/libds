@@ -82,7 +82,7 @@ void ds_array_iterate (void **ll, void (*fptr) (void *))
    }
 }
 
-static bool ds_grow_array (void ***ll, size_t nelems)
+static bool ds_array_grow (void ***ll, size_t nelems)
 {
    void **array = (*ll);
    size_t nitems = (uintptr_t)array[-1];
@@ -99,13 +99,27 @@ static bool ds_grow_array (void ***ll, size_t nelems)
    return true;
 }
 
+void ds_array_shrink_to_fit (void ***ll)
+{
+   void **array = (*ll);
+   size_t nitems = (uintptr_t)array[-1];
+   size_t newsize = nitems + 2;
+
+   void **tmp = realloc (&array[-1], newsize * sizeof *tmp);
+   if (!tmp)
+      return;
+
+   tmp[nitems + 1] = NULL;
+   (*ll) = &tmp[1];
+}
+
 void *ds_array_ins_tail (void ***ll, void *el)
 {
    if (!ll || !(*ll) || !el)
       return NULL;
 
    size_t inspos = (uintptr_t)(*ll)[-1];
-   if (!(ds_grow_array (ll, 1)))
+   if (!(ds_array_grow (ll, 1)))
       return NULL;
 
    (*ll)[inspos] = el;
@@ -119,7 +133,7 @@ void *ds_array_ins_head (void ***ll, void *el)
       return NULL;
 
    size_t endpos = (uintptr_t)(*ll)[-1];
-   if (!(ds_grow_array (ll, 1)))
+   if (!(ds_array_grow (ll, 1)))
       return NULL;
 
    memmove (&(*ll)[1], &(*ll)[0], sizeof (void *) * (endpos + 1));
