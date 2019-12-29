@@ -2,6 +2,8 @@
 #ifndef H_DS_LL
 #define H_DS_LL
 
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,6 +23,8 @@ extern "C" {
    void *ds_array_remove_head (void ***ll);
 
    void *ds_array_remove (void ***ll, size_t index);
+
+   void ds_array_shrink_to_fit (void ***ll);
 
 #ifdef __cplusplus
 };

@@ -249,7 +249,7 @@ static const char *find_errmsg (ds_hmap_error_t code)
       { ds_hmap_ENONE,       "Success"             },
       { ds_hmap_ENULLOBJ,    "Null Object"         },
       { ds_hmap_EOOM,        "Out of memory"       },
-      { ds_hmap_ENOTFOUND,   "Object nout found"   },
+      { ds_hmap_ENOTFOUND,   "Object not found"    },
       { ds_hmap_EBADPARAM,   "Invalid parameter"   },
    };
 
@@ -361,7 +361,7 @@ void ds_hmap_remove (ds_hmap_t *hm, const void *key, size_t keylen)
 size_t ds_hmap_keys (ds_hmap_t *hm, void ***keys, size_t **keylens)
 {
    if (!hm)
-      return (size_t)-1;
+      return 0;
 
    bool error = true;
 
@@ -409,7 +409,7 @@ errorexit:
    if (error) {
       free (k);
       free (kl);
-      ret = (size_t)-1;
+      ret = 0;
    }
 
    return ret;

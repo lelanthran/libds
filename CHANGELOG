@@ -1,0 +1,12 @@
+# v1.0.2 - Sun Dec 29 22:24:37 SAST 2019
+Additions
+1. Added ds_str_chsubst() functions for substituting characters in a string.
+2. Added ds_str_strsubst() functions for substituting substrings in a string.
+3. Added ds_str_trim() functions for removing leading and trailing whitespace.
+4. Changed the ds_array implementation to address inefficiencies in the length
+   storage.  The interface remains unchanged.
+
+Bugfixes
+1. ds_hmap_keys() now returns zero on error.
+2. Changed the build system to use the one with the pretty colors. As a bonus
+   there is now a build.config file to edit if things need to ever be changed.
