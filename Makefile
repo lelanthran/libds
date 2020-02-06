@@ -6,6 +6,10 @@ $(error $$PROJNAME not defined. Is the 'build.config' file missing?)
 endif
 
 VERSION?=0.0.0
+VERSION_SPACES=$(subst ., ,$(VERSION))
+VERSION_MAJOR=$(word 1, $(VERSION_SPACES))
+VERSION_MINOR=$(word 2, $(VERSION_SPACES))
+VERSION_BUILD=$(word 3, $(VERSION_SPACES))
 
 # ######################################################################
 # Set some colours for $(ECHO) to use
@@ -39,7 +43,7 @@ ifneq ($(MAKEPROGRAM_EXE),)
 ifeq ($(strip $(GITSHELL)),)
 $(error On windows this must be executed from the Git bash shell)
 endif
-	HOME:=$(HOMEDRIVE)$(HOMEPATH)
+	HOME=$(subst \,/,$(HOMEDRIVE)$(HOMEPATH))
 	PLATFORM:=Windows
 	EXE_EXT:=.exe
 	LIB_EXT:=.dll
@@ -52,7 +56,7 @@ ifneq ($(MAKEPROGRAM_MINGW),)
 ifeq ($(strip $(GITSHELL)),)
 $(error On windows this must be executed from the Git bash shell)
 endif
-	HOME:=$(HOMEDRIVE)$(HOMEPATH)
+	HOME=$(subst \,/,$(HOMEDRIVE)$(HOMEPATH))
 	PLATFORM:=Windows
 	EXE_EXT:=.exe
 	LIB_EXT:=.dll
@@ -100,10 +104,11 @@ BINPROGS:=\
 	$(foreach fname,$(MAIN_PROGRAM_CSOURCEFILES),$(OUTBIN)/$(fname)$(EXE_EXT))\
 	$(foreach fname,$(MAIN_PROGRAM_CPPSOURCEFILES),$(OUTBIN)/$(fname)$(EXE_EXT))
 
-DYNLIB:=$(OUTLIB)/lib$(PROJNAME)-$(VERSION)$(LIB_EXT)
-STCLIB:=$(OUTLIB)/lib$(PROJNAME)-$(VERSION).a
-DYNLNK_TARGET:=lib$(PROJNAME)-$(VERSION)$(LIB_EXT)
-STCLNK_TARGET:=lib$(PROJNAME)-$(VERSION).a
+DYNLIB:=$(OUTLIB)/lib$(PROJNAME)$(LIB_EXT).$(VERSION)
+SONAME:=lib$(PROJNAME)$(LIB_EXT).$(VERSION_MAJOR)
+STCLIB:=$(OUTLIB)/lib$(PROJNAME).a
+DYNLNK_TARGET:=lib$(PROJNAME)$(LIB_EXT).$(VERSION)
+STCLNK_TARGET:=lib$(PROJNAME).a
 DYNLNK_NAME:=$(OUTLIB)/lib$(PROJNAME)$(LIB_EXT)
 STCLNK_NAME:=$(OUTLIB)/lib$(PROJNAME).a
 
@@ -151,6 +156,7 @@ endif
 
 # ######################################################################
 # Declare all the flags we need to compile and link
+BUILD_TIMESTAMP:=$(shell date +"%Y%m%d%H%M%S")
 CC:=$(GCC)
 CXX:=$(GXX)
 PROG_LD=$(GCC_LD_PROG)
@@ -170,6 +176,7 @@ COMMONFLAGS:=\
 	-W -Wall -c -fPIC \
 	-DPLATFORM=$(PLATFORM) -DPLATFORM_$(PLATFORM) \
 	-D$(PROJNAME)_version='"$(VERSION)"'\
+	-DBUILD_TIMESTAMP='"$(BUILD_TIMESTAMP)"'\
 	$(PLATFORM_CFLAGS)\
 	$(INCLUDE_DIRS)
 
@@ -217,7 +224,7 @@ real-all:	$(OUTDIRS) $(DYNLIB) $(STCLIB) $(BINPROGS)
 
 all:	real-all
 	@$(ECHO) "[$(CYAN)Soft linking$(NONE)]    [$(STCLNK_TARGET)]"
-	@ln -f -s $(STCLNK_TARGET) $(STCLNK_NAME)
+	@# ln -f -s $(STCLNK_TARGET) $(STCLNK_NAME)
 	@$(ECHO) "[$(CYAN)Soft linking$(NONE)]    [$(DYNLNK_TARGET)]"
 	@ln -f -s $(DYNLNK_TARGET) $(DYNLNK_NAME)
 	@$(ECHO) "[$(CYAN)Copying$(NONE)     ]    [ -> $(OUTDIR)/lib]"
@@ -274,6 +281,9 @@ real-show:
 	@$(ECHO) "$(GREEN)SOURCES$(NONE)     "
 	@for X in $(SOURCES); do $(ECHO) "              $$X"; done
 	@$(ECHO) "$(GREEN)PWD$(NONE)          $(PWD)"
+	@$(ECHO) "$(GREEN)VERSION_MAJOR$(NONE)          $(VERSION_MAJOR)"
+	@$(ECHO) "$(GREEN)VERSION_MINOR$(NONE)          $(VERSION_MINOR)"
+	@$(ECHO) "$(GREEN)VERSION_BUILD$(NONE)          $(VERSION_BUILD)"
 
 show:	real-show
 	@$(ECHO) "Only target 'show' selected, ending now."
@@ -315,7 +325,8 @@ $(OUTBIN)/%.elf:	$(OUTOBS)/%.o $(OBS)
 
 $(DYNLIB):	$(OBS)
 	@$(ECHO) "[$(GREEN)Linking$(NONE)     ]    [$@]"
-	@$(LD_LIB) -shared $^ -o $@ $(LDFLAGS) $(EXTRA_LIB_LDFLAGS) ||\
+	@$(LD_LIB) -shared $^ -o $@ $(LDFLAGS) $(EXTRA_LIB_LDFLAGS) \
+		-Wl,-soname=$(SONAME) ||\
 		($(ECHO) "$(INV)$(RED)[Link failure]   [$@]$(NONE)" ; exit 127)
 
 $(STCLIB):	$(OBS)
