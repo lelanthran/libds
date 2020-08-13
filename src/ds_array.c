@@ -168,7 +168,7 @@ void *ds_array_remove (void ***ll, size_t index)
       return NULL;
 
    size_t len = ds_array_length (*ll);
-   if (index > len)
+   if (index >= len)
       return NULL;
 
    void *ret = (*ll)[index];
@@ -176,5 +176,6 @@ void *ds_array_remove (void ***ll, size_t index)
    memmove (&(*ll)[index], &(*ll)[index + 1],
             (sizeof (void *)) * (len - index));
 
+   (*ll)[-1] = (void *)(uintptr_t)len - 1;
    return ret;
 }

@@ -191,6 +191,8 @@ char *ds_str_ltrim (char *src)
       src[0] = 0;
    }
 
+   slen++;
+
    memmove (&src[0], &src[begin], slen - begin);
    return src;
 }

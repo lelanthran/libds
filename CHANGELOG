@@ -1,3 +1,8 @@
+# v1.0.3 - ???
+Bugfixes
+1. Array length was not updated when array was shrunk.
+2. str_ltrim() bug with not properly null-terminating the result.
+
 # v1.0.2 - Sun Dec 29 22:24:37 SAST 2019
 Additions
 1. Added ds_str_chsubst() functions for substituting characters in a string.

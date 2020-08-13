@@ -21,7 +21,7 @@ extern "C" {
 
    // Append all the strings given in '...' (ending with a NULL) to
    // parameter '(*dst)'. Parameter '(*dst)' is reallocated as necessary
-   // and therefore must be reallocatable (returned by free() or similar).
+   // and therefore must be reallocatable (returned by malloc() or similar).
    // The reallocated '(*dst)' is also returned on success.
    //
    // NULL is returned on error.

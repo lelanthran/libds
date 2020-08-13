@@ -22,6 +22,12 @@ int main (void)
    char *test_eltrim = NULL;
    char *test_etrim = NULL;
 
+   char *test_etrim1 = NULL;
+   char *test_etrim2 = NULL;
+   char *test_etrim3 = NULL;
+   char *test_etrim4 = NULL;
+   char *test_etrim5 = NULL;
+
    char *test_strsubst = NULL;
 
    /* ******************************************************************* */
@@ -80,6 +86,12 @@ int main (void)
    test_ertrim = ds_str_dup ("   \n   ");
    test_eltrim = ds_str_dup ("   \n   ");
    test_etrim = ds_str_dup ("  \n   ");
+   test_etrim1 = NULL;
+   test_etrim2 = ds_str_dup ("");
+   test_etrim3 = ds_str_dup ("12345");
+   test_etrim4 = ds_str_dup (" 12345");
+   test_etrim5 = ds_str_dup (" 12345");
+   test_etrim5[3] = 0;
 
    if (!test_rtrim || !test_ltrim || !test_trim) {
       fprintf (stderr, "Failed to allocate test strings for trim functions\n");
@@ -93,6 +105,12 @@ int main (void)
    ds_str_rtrim (test_ertrim);
    ds_str_ltrim (test_eltrim);
    ds_str_trim (test_etrim);
+
+   ds_str_ltrim (test_etrim1);
+   ds_str_ltrim (test_etrim2);
+   ds_str_ltrim (test_etrim3);
+   ds_str_ltrim (test_etrim4);
+   ds_str_ltrim (test_etrim5);
 
    /* ******************************************************************* */
 
@@ -127,6 +145,12 @@ int main (void)
    printf ("test_eltrim:   [%s]\n", test_eltrim);
    printf ("test_etrim:    [%s]\n", test_etrim);
 
+   printf ("test_etrim1:    [%s]\n", test_etrim1);
+   printf ("test_etrim2:    [%s]\n", test_etrim2);
+   printf ("test_etrim3:    [%s]\n", test_etrim3);
+   printf ("test_etrim4:    [%s]\n", test_etrim4);
+   printf ("test_etrim5:    [%s]\n", test_etrim5);
+
    printf ("test_strsubst: [%s]\n", test_strsubst);
 
    ret = EXIT_SUCCESS;
@@ -146,6 +170,12 @@ errorexit:
    free (test_ertrim);
    free (test_eltrim);
    free (test_etrim);
+
+   free (test_etrim1);
+   free (test_etrim2);
+   free (test_etrim3);
+   free (test_etrim4);
+   free (test_etrim5);
 
    free (test_strsubst);
 
