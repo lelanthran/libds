@@ -1,4 +1,4 @@
-# v1.0.3 - ???
+# v1.0.3 - Thu Aug 13 10:52:51 SAST 2020
 Bugfixes
 1. Array length was not updated when array was shrunk.
 2. str_ltrim() bug with not properly null-terminating the result.
