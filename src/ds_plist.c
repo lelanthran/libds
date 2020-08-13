@@ -104,13 +104,13 @@ static void plist_dump (ds_plist_t *plist, FILE *outf, size_t indent)
    fprintf (outf, "[%s] %zu elements, %zu children\n",
                   plist->name, nelements, nchildren);
 
-   for (size_t i=nelements; i++) {
+   for (size_t i=0; i<nelements; i++) {
       void **array_values = ds_array_index (plist->array_elements, i);
       size_t nvalues = ds_array_length (array_values);
       PRINT_INDENT (indent + 3);
       fprintf (outf, "name [%s]: ", ds_array_index (array_values, 0));
       for (size_t j=1; j<nvalues; j++) {
-         fprintf (outf, "[%s] ", ds_array_index (array_values, j));
+         fprintf (outf, "[%s] ", (char *)ds_array_index (array_values, j));
       }
       fprintf (outf, "\n");
    }

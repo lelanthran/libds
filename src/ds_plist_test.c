@@ -9,7 +9,7 @@ int main (void)
 {
    int ret = EXIT_FAILURE;
 
-   ds_plist_t *parent_list = ds_plist_new (NULL);
+   ds_plist_t *parent_list = ds_plist_new (NULL, "root");
    printf ("Testing the properties list module.\n");
 
    if (!parent_list) {

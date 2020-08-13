@@ -2,6 +2,9 @@
 #ifndef H_PLIST
 #define H_PLIST
 
+#include <stdbool.h>
+#include <stdio.h>
+
 typedef struct ds_plist_t ds_plist_t;
 
 #ifdef __cplusplus
