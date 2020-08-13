@@ -22,6 +22,7 @@ extern "C" {
 
    // Set name to the array of values given, which must be terminated with a NULL argument
    bool ds_plist_value_set (ds_plist_t *plist, const char *name, const char *value, ...);
+   bool ds_plist_value_vset (ds_plist_t *plist, const char *name, const char *value, ...);
    bool ds_plist_value_append (ds_plist_t *plist, const char *name, const char *value);
 
 #ifdef __cplusplus

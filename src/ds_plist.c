@@ -68,7 +68,7 @@ void ds_plist_del (ds_plist_t *plist)
 
 bool ds_plist_child_add (ds_plist_t *parent, ds_plist_t *child)
 {
-   if (parent || !child)
+   if (!parent || !child)
       return true;
 
    if (!(ds_array_ins_tail (&parent->array_children, child)))
@@ -113,6 +113,10 @@ static void plist_dump (ds_plist_t *plist, FILE *outf, size_t indent)
          fprintf (outf, "[%s] ", (char *)ds_array_index (array_values, j));
       }
       fprintf (outf, "\n");
+   }
+   for (size_t i=0; i<nchildren; i++) {
+      ds_plist_t *child = ds_array_index (plist->array_children, i);
+      plist_dump (child, outf, indent + 3);
    }
    // TODO: Children
 }
