@@ -223,10 +223,12 @@ real-help:
 real-all:	$(OUTDIRS) $(DYNLIB) $(STCLIB) $(BINPROGS)
 
 all:	real-all
-	@$(ECHO) "[$(CYAN)Soft linking$(NONE)]    [$(STCLNK_TARGET)]"
+	@#$(ECHO) "[$(CYAN)Soft linking$(NONE)]    [$(STCLNK_TARGET)]"
 	@# ln -f -s $(STCLNK_TARGET) $(STCLNK_NAME)
 	@$(ECHO) "[$(CYAN)Soft linking$(NONE)]    [$(DYNLNK_TARGET)]"
-	@ln -f -s $(DYNLNK_TARGET) $(DYNLNK_NAME)
+	@#ln -f -s $(DYNLNK_TARGET) $(DYNLNK_NAME)
+	@$(ECHO) "[$(CYAN)Soft linking$(NONE)]    [$(SONAME)]"
+	@cd $(OUTLIB) && ln -f -s $(DYNLNK_TARGET) $(SONAME)
 	@$(ECHO) "[$(CYAN)Copying$(NONE)     ]    [ -> $(OUTDIR)/lib]"
 	@cp $(OUTLIB)/* $(OUTDIR)/lib
 	@$(ECHO) "[$(CYAN)Copying$(NONE)     ]    [ -> ./include/]"
@@ -243,6 +245,7 @@ real-show:
 	@$(ECHO) "$(GREEN)LIB_EXT$(NONE)      $(LIB_EXT)"
 	@$(ECHO) "$(GREEN)DYNLIB$(NONE)       $(DYNLIB)"
 	@$(ECHO) "$(GREEN)STCLIB$(NONE)       $(STCLIB)"
+	@$(ECHO) "$(GREEN)SONAME$(NONE)       $(SONAME)"
 	@$(ECHO) "$(GREEN)CC$(NONE)           $(CC)"
 	@$(ECHO) "$(GREEN)CXX$(NONE)          $(CXX)"
 	@$(ECHO) "$(GREEN)CFLAGS$(NONE)       $(CFLAGS)"
