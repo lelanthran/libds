@@ -1,10 +1,65 @@
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "ds_plist.h"
 #include "ds_array.h"
 #include "ds_str.h"
 
+
+/* ************************************************************************ */
+struct nvlist_t {
+   char *name;
+   void **array_values;
+};
+
+static void nvlist_del (struct nvlist_t *nvl)
+{
+   if (nvl) {
+      free (nvl->name);
+      ds_array_iterate (nvl->array_values, free);
+      ds_array_del (nvl->array_values);
+      free (nvl);
+   }
+}
+
+static struct nvlist_t *nvlist_new (const char *name)
+{
+   struct nvlist_t *ret = calloc (1, sizeof *ret);
+
+   if (ret) {
+      ret->name = ds_str_dup (name);
+      ret->array_values = ds_array_new ();
+   }
+
+   if (!ret || !ret->name || !ret->array_values) {
+      nvlist_del (ret);
+      ret = NULL;
+   }
+
+   return ret;
+}
+
+static bool nvlist_append (struct nvlist_t *nvl, const char *value)
+{
+   if (!nvl || !value)
+      return false;
+
+   size_t nitems = ds_array_length (nvl->array_values);
+   for (size_t i=0; i<nitems; i++) {
+      const char *item = ds_array_index (nvl->array_values, i);
+      if ((strcmp (item, value))==0) {
+         return true;
+      }
+   }
+
+   if (!(ds_array_ins_tail (&nvl->array_values, ds_str_dup (value))))
+      return false;
+
+   return true;
+}
+
+/* ************************************************************************ */
 
 struct ds_plist_t {
    char         *name;
@@ -57,9 +112,11 @@ void ds_plist_del (ds_plist_t *plist)
    free (plist->name);
 
    // TODO: Remove all the elements
+   ds_array_iterate (plist->array_elements, (void (*) (void *))nvlist_del);
    ds_array_del (plist->array_elements);
 
    // TODO: Remove all the children
+   ds_array_iterate (plist->array_children, (void (*) (void *))ds_plist_del);
    ds_array_del (plist->array_children);
 
    free (plist);
@@ -105,12 +162,12 @@ static void plist_dump (ds_plist_t *plist, FILE *outf, size_t indent)
                   plist->name, nelements, nchildren);
 
    for (size_t i=0; i<nelements; i++) {
-      void **array_values = ds_array_index (plist->array_elements, i);
-      size_t nvalues = ds_array_length (array_values);
+      struct nvlist_t *value = ds_array_index (plist->array_elements, i);
       PRINT_INDENT (indent + 3);
-      fprintf (outf, "name [%s]: ", ds_array_index (array_values, 0));
-      for (size_t j=1; j<nvalues; j++) {
-         fprintf (outf, "[%s] ", (char *)ds_array_index (array_values, j));
+      fprintf (outf, "name [%s]: ", value->name);
+      size_t nvalues = ds_array_length (value->array_values);
+      for (size_t j=0; j<nvalues; j++) {
+         fprintf (outf, "[%s] ", (char *)ds_array_index (value->array_values, j));
       }
       fprintf (outf, "\n");
    }
@@ -133,4 +190,73 @@ void ds_plist_dump (ds_plist_t *plist, FILE *outf)
 
    plist_dump (plist, outf, 1);
 }
+
+bool ds_plist_value_set (ds_plist_t *plist, const char *name, const char *value, ...)
+{
+   va_list ap;
+   va_start (ap, value);
+   bool ret = ds_plist_value_vset (plist, name, value, ap);
+   va_end (ap);
+   return ret;
+}
+
+bool ds_plist_value_vset (ds_plist_t *plist, const char *name, const char *value, va_list ap)
+{
+   bool ret = true;
+   while (name && value) {
+      ret = ret && ds_plist_value_append (plist, name, value);
+      name = va_arg (ap, const char *);
+      value = va_arg (ap, const char *);
+   }
+   return ret;
+}
+
+static struct nvlist_t *plist_find_values (ds_plist_t *plist, const char *name)
+{
+   size_t nelements = ds_array_length (plist->array_elements);
+   for (size_t i=0; i<nelements; i++) {
+      struct nvlist_t *element = ds_array_index (plist->array_elements, i);
+      if ((strcmp (element->name, name))==0) {
+         return element;
+      }
+   }
+
+   return NULL;
+}
+
+bool ds_plist_value_append (ds_plist_t *plist, const char *name, const char *value)
+{
+   bool error = true;
+   struct nvlist_t *record = NULL;
+
+   if (!plist || !name || !value)
+      goto errorexit;
+
+   record = plist_find_values (plist, name);
+   if (record) {
+      if (!(nvlist_append (record, value)))
+         goto errorexit;
+      error = false;
+      goto errorexit;
+   }
+
+   if (!(record = nvlist_new (name)))
+      goto errorexit;
+
+   if (!(nvlist_append (record, value))) {
+      nvlist_del (record);
+      goto errorexit;
+   }
+
+   if (!(ds_array_ins_tail (&plist->array_elements, record))) {
+      nvlist_del (record);
+      goto errorexit;
+   }
+
+   error = false;
+
+errorexit:
+   return !error;
+}
+
 
