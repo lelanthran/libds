@@ -53,7 +53,7 @@ static bool nvlist_append (struct nvlist_t *nvl, const char *value)
       }
    }
 
-   if (!(ds_array_ins_tail (&nvl->array_values, ds_str_dup (value))))
+   if (!(ds_array_ins_head (&nvl->array_values, ds_str_dup (value))))
       return false;
 
    return true;
@@ -205,7 +205,6 @@ bool ds_plist_value_vset (ds_plist_t *plist, const char *name, const char *value
    bool ret = true;
    while (name && value) {
       ret = ret && ds_plist_value_append (plist, name, value);
-      name = va_arg (ap, const char *);
       value = va_arg (ap, const char *);
    }
    return ret;

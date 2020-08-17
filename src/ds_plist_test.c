@@ -18,7 +18,9 @@ int main (void)
       goto errorexit;
    }
 
-   ds_plist_value_set (child1, "Child1TestName", "Child1TestValue", NULL);
+   ds_plist_value_set (child1, "Child1TestName", "Child1TestValue1", NULL);
+   ds_plist_value_set (child1, "Child1TestName", "Child1TestValue2", NULL);
+   ds_plist_value_set (child1, "Child1TestName", "Child1TestValue3", "Child1TestValue4", NULL);
    ds_plist_dump (parent_list, NULL);
 
    ret = EXIT_SUCCESS;
