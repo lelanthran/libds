@@ -30,6 +30,11 @@ int main (void)
 
    char *test_strsubst = NULL;
 
+   char *test_split1_src = ",one, two, three point five, , four,";
+   char *test_split2_src = ",one,'two', \"three point five\", four";
+   char **test_split1 = NULL;
+   char **test_split2 = NULL;
+
    /* ******************************************************************* */
 
    if (!(test_dup)) {
@@ -152,6 +157,16 @@ int main (void)
    printf ("test_etrim5:    [%s]\n", test_etrim5);
 
    printf ("test_strsubst: [%s]\n", test_strsubst);
+
+   printf ("test_split1: [%s]\n", test_split1_src);
+   for (size_t i=0; test_split1 && test_split1[i]; i++) {
+      printf ("   %zu: test_split1: [%s]\n", i, test_split1[i]);
+   }
+
+   printf ("test_split2: [%s]\n", test_split2_src);
+   for (size_t i=0; test_split2 && test_split2[i]; i++) {
+      printf ("   %zu: test_split2: [%s]\n", i, test_split2[i]);
+   }
 
    ret = EXIT_SUCCESS;
 

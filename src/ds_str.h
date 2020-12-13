@@ -69,6 +69,7 @@ extern "C" {
    char *ds_str_vstrsubst (const char *src,
                            const char *olds, const char *news, va_list ap);
 
+
 #ifdef __cplusplus
 };
 #endif
