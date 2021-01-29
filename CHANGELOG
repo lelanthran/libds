@@ -1,3 +1,7 @@
+# v1.0.5 - ???
+Additions
+1. Added a substring function to ds_str.h (ds_str_substring()).
+
 # v1.0.4 - Sun 13 Dec 2020 10:03:46 SAST
 Additions
 1. Added property lists (ds_plist) module.

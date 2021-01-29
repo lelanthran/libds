@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ds_str.h"
 
@@ -29,6 +30,12 @@ int main (void)
    char *test_etrim5 = NULL;
 
    char *test_strsubst = NULL;
+
+   char *test_substring1 = NULL,
+        *test_substring2 = NULL,
+        *test_substring3 = NULL,
+        *test_substring4 = NULL,
+        *test_substring5 = NULL;
 
    /* ******************************************************************* */
 
@@ -129,6 +136,14 @@ int main (void)
       goto errorexit;
    }
 
+   size_t len = strlen (test_strsubst);
+   test_substring1 = ds_str_substring (test_strsubst, 10, 5);
+   test_substring2 = ds_str_substring (test_strsubst, 0, 0);
+   test_substring3 = ds_str_substring (test_strsubst, len - 1, 5);
+   test_substring4 = ds_str_substring (test_strsubst, len, 5);
+   test_substring5 = ds_str_substring (test_strsubst, len + 1, 5);
+
+
    /* ******************************************************************* */
 
    printf ("test_dup:      [%s]\n", test_dup);
@@ -152,6 +167,16 @@ int main (void)
    printf ("test_etrim5:    [%s]\n", test_etrim5);
 
    printf ("test_strsubst: [%s]\n", test_strsubst);
+
+   printf ("&test_strsubst[10]:    [%s]\n", &test_strsubst[10]);
+   printf ("&test_strsubst[len-1]: [%s]\n", &test_strsubst[len-1]);
+   printf ("&test_strsubst[len]:   [0x%02x]\n", test_strsubst[len]);
+
+   printf ("test_substring1 (10, 15):   [%s]\n", test_substring1);
+   printf ("test_substring2 (0, 0):     [%s]\n", test_substring2);
+   printf ("test_substring3 (%zu, 5):   [%s]\n", len - 1, test_substring3);
+   printf ("test_substring4 (%zu, 5):   [%s]\n", len, test_substring4);
+   printf ("test_substring5 (%zu, 5):   [%s]\n", len + 1, test_substring5);
 
    ret = EXIT_SUCCESS;
 
@@ -178,6 +203,12 @@ errorexit:
    free (test_etrim5);
 
    free (test_strsubst);
+
+   free (test_substring1);
+   free (test_substring2);
+   free (test_substring3);
+   free (test_substring4);
+   free (test_substring5);
 
    return ret;
 }

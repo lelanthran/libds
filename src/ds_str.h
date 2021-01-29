@@ -69,6 +69,18 @@ extern "C" {
    char *ds_str_vstrsubst (const char *src,
                            const char *olds, const char *news, va_list ap);
 
+   // Copy nchars from the string src, starting at position from_position. The
+   // caller is responsible for freeing the returned value. If the nchars results
+   // in a out of bounds access (i.e. the caller specifies more character to copy
+   // than exist in the src) the the copy is limited to the number of characters
+   // available in the string.
+   //
+   // If the from_position is out of bounds, then an empty string is returned and
+   // must still be freed by the caller.
+   //
+   // If there is no memory to allocate the return value then NULL is returned.
+   char *ds_str_substring (const char *src, size_t from_position, size_t nchars);
+
 #ifdef __cplusplus
 };
 #endif
