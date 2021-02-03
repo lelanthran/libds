@@ -346,12 +346,15 @@ errorexit:
 
 char *ds_str_substring (const char *src, size_t from_position, size_t nchars)
 {
-   char *ret = calloc (1, nchars + 1);
-   if (!ret)
-      return NULL;
-
    size_t srclen = strlen (src);
    size_t lastchar = nchars + from_position;
+
+   if (lastchar > srclen)
+      lastchar = srclen;
+
+   char *ret = calloc (1, (srclen - lastchar) + 2);
+   if (!ret)
+      return NULL;
 
    size_t dstidx = 0;
    for (size_t i=from_position; i<lastchar && i<srclen; i++) {
