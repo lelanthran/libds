@@ -8,11 +8,9 @@
 
 void **ds_array_new (void)
 {
-   size_t size = 0;
-   void **ret = malloc ((sizeof *ret) * (size + 2));
-   ret[0] = (uintptr_t)0;
-   ret[1] = NULL;
-   return &ret[1];
+   uint8_t *memblock = calloc (1, (sizeof (size_t) + sizeof (void *)));
+   void **ret = (void **)&memblock[sizeof (size_t)];
+   return ret;
 }
 
 void ds_array_del (void **ll)
@@ -20,7 +18,8 @@ void ds_array_del (void **ll)
    if (!ll)
       return;
 
-   free (&ll[-1]);
+   uint8_t *memblock = (uint8_t *)ll;
+   free (&memblock[-(sizeof (size_t))]);
 }
 
 void **ds_array_copy (void **src, size_t from_index, size_t to_index)
@@ -51,13 +50,13 @@ errorexit:
    return ret;
 }
 
-
 size_t ds_array_length (void **ll)
 {
    if (!ll)
       return 0;
 
-   return (uintptr_t)ll[-1];
+   uint8_t *memblock = (uint8_t *)ll;
+   return (size_t)memblock[-(sizeof (size_t))];
 }
 
 void *ds_array_index (void **ll, size_t i)
@@ -65,7 +64,8 @@ void *ds_array_index (void **ll, size_t i)
    if (!ll)
       return NULL;
 
-   size_t len = (uintptr_t)ll[-1];
+   uint8_t *memblock = (uint8_t *)ll;
+   size_t len = (size_t)memblock[-(sizeof (size_t))];
    if (i >= len)
       return NULL;
 
@@ -84,33 +84,36 @@ void ds_array_iterate (void **ll, void (*fptr) (void *))
 
 static bool ds_array_grow (void ***ll, size_t nelems)
 {
-   void **array = (*ll);
-   size_t nitems = (uintptr_t)array[-1];
-   size_t newsize = nitems + 2 + nelems;
+   uint8_t *memblock = (uint8_t *)*ll;
+   size_t nitems = (size_t)memblock[-(sizeof (size_t))];
+   size_t newsize = (sizeof (size_t)) + ((nitems + nelems + 1) * sizeof (void *));
+   size_t oldsize = (sizeof (size_t)) + ((nitems + 1) * sizeof (void *));
 
-   void **tmp = realloc (&array[-1], newsize * sizeof *tmp);
+   uint8_t *tmp = realloc (&memblock[-(sizeof (size_t))], newsize);
    if (!tmp)
       return false;
 
-   tmp[0] = (void *)(uintptr_t)(nitems + nelems);
-   memset (&tmp[nitems+1], 0, (newsize - nitems - 1) * sizeof *tmp);
-   (*ll) = &tmp[1];
+   size_t newlen = nitems + nelems;
+   memcpy (tmp, &newlen, sizeof newlen);
+
+   (*ll) = (void **)&tmp[(sizeof (size_t))];
+   (*ll)[newlen] = NULL;
+   (*ll)[newlen-1] = NULL;
 
    return true;
 }
 
 void ds_array_shrink_to_fit (void ***ll)
 {
-   void **array = (*ll);
-   size_t nitems = (uintptr_t)array[-1];
-   size_t newsize = nitems + 2;
+   uint8_t *memblock = (uint8_t *)(*ll);
+   size_t nitems = (size_t)memblock[-(sizeof (size_t))];
+   size_t newsize = (sizeof (size_t)) + ((nitems + sizeof (void *)) * sizeof (void*));
 
-   void **tmp = realloc (&array[-1], newsize * sizeof *tmp);
+   uint8_t *tmp = realloc (&memblock[-(sizeof (size_t))], newsize);
    if (!tmp)
       return;
 
-   tmp[nitems + 1] = NULL;
-   (*ll) = &tmp[1];
+   (*ll) = (void **)&tmp[-sizeof (size_t)];
 }
 
 void *ds_array_ins_tail (void ***ll, void *el)
@@ -118,7 +121,9 @@ void *ds_array_ins_tail (void ***ll, void *el)
    if (!ll || !(*ll) || !el)
       return NULL;
 
-   size_t inspos = (uintptr_t)(*ll)[-1];
+   uint8_t *memblock = (uint8_t *)*ll;
+
+   size_t inspos = (size_t)memblock[-(sizeof (size_t))];
    if (!(ds_array_grow (ll, 1)))
       return NULL;
 
@@ -148,10 +153,13 @@ void *ds_array_remove_tail (void ***ll)
    if(!ll || !(*ll) || !(*ll)[0])
       return NULL;
 
-   size_t nitems = (uintptr_t) (*ll)[-1];
-   void *ret = (*ll)[nitems - 1];
-   (*ll)[nitems - 1] = NULL;
-   (*ll)[-1] = (void *)(uintptr_t)nitems - 1;
+   uint8_t *memblock = (uint8_t *)(*ll);
+   size_t nitems = (size_t)memblock[-(sizeof (size_t))];
+   nitems--;
+
+   void *ret = (*ll)[nitems];
+   (*ll)[nitems] = NULL;
+   memcpy (&memblock[-(sizeof (size_t))], &nitems, sizeof nitems);
 
    return ret;
 }
@@ -176,6 +184,9 @@ void *ds_array_remove (void ***ll, size_t index)
    memmove (&(*ll)[index], &(*ll)[index + 1],
             (sizeof (void *)) * (len - index));
 
-   (*ll)[-1] = (void *)(uintptr_t)len - 1;
+   uint8_t *memblock = (uint8_t *)(*ll);
+   len--;
+   memcpy (&memblock[-sizeof (size_t)], &len, sizeof len);
+
    return ret;
 }
