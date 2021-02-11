@@ -57,6 +57,9 @@ extern "C" {
    // the key is copied (the caller may free the key after this function
    // returns).
    //
+   // The length of the data is not used; it is simply stored and returned
+   // in a call to ds_hmap_get().
+   //
    // On error NULL is returned. On success a pointer to the key is
    // returned.
    const void *ds_hmap_set (ds_hmap_t *hm, const void *key,  size_t keylen,

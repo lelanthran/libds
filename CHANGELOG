@@ -3,6 +3,8 @@ Additions
 1. Added a substring function to ds_str.h (ds_str_substring()).
 2. Changed ds_arrays to use a length of size_t (previously used
    a length of uint16_t).
+3. Clarified the usage of the datalen parameter in ds_hmap_set()
+   in the headers.
 
 # v1.0.4 - Sun 13 Dec 2020 10:03:46 SAST
 Additions
