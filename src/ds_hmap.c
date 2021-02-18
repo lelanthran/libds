@@ -328,8 +328,8 @@ bool ds_hmap_get (ds_hmap_t *hm, const void *key,  size_t keylen,
       goto errorexit;
    }
 
-   (*data) = entry->data;
-   (*datalen) = entry->datalen;
+   if (data)      (*data)    = entry->data;
+   if (datalen)   (*datalen) = entry->datalen;
 
    error = false;
 
@@ -369,8 +369,8 @@ size_t ds_hmap_keys (ds_hmap_t *hm, void ***keys, size_t **keylens)
    size_t *kl = NULL;
    size_t ret = ds_hmap_num_entries (hm);
 
-   k = malloc (sizeof *k * ret);
-   kl = malloc (sizeof *kl * ret);
+   k = calloc (ret + 1, sizeof *k);
+   kl = calloc (ret + 1, sizeof *kl);
 
    if (!k || !kl) {
       hm->errnum = ds_hmap_EBADPARAM;

@@ -5,27 +5,34 @@
 
 #include "ds_array.h"
 
+struct ds_array_t {
+   size_t nitems;
+   void **array;
+};
 
-void **ds_array_new (void)
+ds_array_t *ds_array_new (void)
 {
-   uint8_t *memblock = calloc (1, (sizeof (size_t) + sizeof (void *)));
-   void **ret = (void **)&memblock[sizeof (size_t)];
+   ds_array_t *ret = calloc (1, sizeof *ret);
+   if (!(ret->array = calloc (1, sizeof *(ret->array)))) {
+      free (ret);
+      ret = NULL;
+   }
    return ret;
 }
 
-void ds_array_del (void **ll)
+void ds_array_del (ds_array_t *ll)
 {
    if (!ll)
       return;
 
-   uint8_t *memblock = (uint8_t *)ll;
-   free (&memblock[-(sizeof (size_t))]);
+   free (ll->array);
+   free (ll);
 }
 
-void **ds_array_copy (void **src, size_t from_index, size_t to_index)
+ds_array_t *ds_array_copy (const ds_array_t *src, size_t from_index, size_t to_index)
 {
    size_t nitems;
-   void **ret = ds_array_new ();
+   ds_array_t *ret = ds_array_new ();
    bool error = true;
 
    if (!src)
@@ -34,7 +41,7 @@ void **ds_array_copy (void **src, size_t from_index, size_t to_index)
    nitems = ds_array_length (src);
 
    for (size_t i=from_index; i>=from_index && i<to_index && i<nitems; i++) {
-      if (!(ds_array_ins_tail (&ret, src[i])))
+      if (!(ds_array_ins_tail (ret, src->array[i])))
          goto errorexit;
    }
 
@@ -50,61 +57,53 @@ errorexit:
    return ret;
 }
 
-size_t ds_array_length (void **ll)
+size_t ds_array_length (const ds_array_t *ll)
 {
    if (!ll)
       return 0;
 
-   uint8_t *memblock = (uint8_t *)ll;
-   return (size_t)memblock[-(sizeof (size_t))];
+   return ll->nitems;
 }
 
-void *ds_array_index (void **ll, size_t i)
+void *ds_array_index (const ds_array_t *ll, size_t i)
 {
    if (!ll)
       return NULL;
 
-   uint8_t *memblock = (uint8_t *)ll;
-   size_t len = (size_t)memblock[-(sizeof (size_t))];
-   if (i >= len)
+   if (i >= ll->nitems)
       return NULL;
 
-   return ll[i];
+   return ll->array[i];
 }
 
-void ds_array_iterate (void **ll, void (*fptr) (void *))
+void ds_array_iterate (const ds_array_t *ll, void (*fptr) (void *))
 {
    if (!ll || !fptr)
       return;
 
-   for (size_t i=0; ll[i]; i++) {
-      fptr (ll[i]);
+   for (size_t i=0; ll->array[i]; i++) {
+      fptr (ll->array[i]);
    }
 }
 
-static bool ds_array_grow (void ***ll, size_t nelems)
+static bool ds_array_grow (ds_array_t *ll, size_t nelems)
 {
-   uint8_t *memblock = (uint8_t *)*ll;
-   size_t nitems = (size_t)memblock[-(sizeof (size_t))];
-   size_t newsize = (sizeof (size_t)) + ((nitems + nelems + 1) * sizeof (void *));
-   size_t oldsize = (sizeof (size_t)) + ((nitems + 1) * sizeof (void *));
+   if (!ll)
+      return false;
 
-   uint8_t *tmp = realloc (&memblock[-(sizeof (size_t))], newsize);
+   void **tmp = realloc (ll->array, (sizeof *ll->array) * (ll->nitems + 1 + nelems + 1));
    if (!tmp)
       return false;
 
-   size_t newlen = nitems + nelems;
-   memcpy (tmp, &newlen, sizeof newlen);
+   ll->array = tmp;
 
-   (*ll) = (void **)&tmp[(sizeof (size_t))];
-   (*ll)[newlen] = NULL;
-   (*ll)[newlen-1] = NULL;
-
+   memset (&ll->array[ll->nitems], 0, (sizeof *ll->array) * (nelems + 1));
    return true;
 }
 
-void ds_array_shrink_to_fit (void ***ll)
+void ds_array_shrink_to_fit (ds_array_t *ll)
 {
+#if 0
    uint8_t *memblock = (uint8_t *)(*ll);
    size_t nitems = (size_t)memblock[-(sizeof (size_t))];
    size_t newsize = (sizeof (size_t)) + ((nitems + sizeof (void *)) * sizeof (void*));
@@ -112,81 +111,74 @@ void ds_array_shrink_to_fit (void ***ll)
    uint8_t *tmp = realloc (&memblock[-(sizeof (size_t))], newsize);
    if (!tmp)
       return;
+#endif
 
-   (*ll) = (void **)&tmp[-sizeof (size_t)];
+   // TODO:
+   // (*ll) = (void **)&tmp[-sizeof (size_t)];
 }
 
-void *ds_array_ins_tail (void ***ll, void *el)
+void *ds_array_ins_tail (ds_array_t *ll, void *el)
 {
-   if (!ll || !(*ll) || !el)
+   if (!ll || !el)
       return NULL;
 
-   uint8_t *memblock = (uint8_t *)*ll;
-
-   size_t inspos = (size_t)memblock[-(sizeof (size_t))];
    if (!(ds_array_grow (ll, 1)))
       return NULL;
 
-   (*ll)[inspos] = el;
+   ll->array[ll->nitems++] = el;
 
-   return (*ll)[inspos];
+   return el;
 }
 
-void *ds_array_ins_head (void ***ll, void *el)
+void *ds_array_ins_head (ds_array_t *ll, void *el)
 {
-   if (!ll || !(*ll) || !el)
+   if (!ll || !el)
       return NULL;
 
-   size_t endpos = (uintptr_t)(*ll)[-1];
+   size_t endpos = ll->nitems;
+
    if (!(ds_array_grow (ll, 1)))
       return NULL;
 
-   memmove (&(*ll)[1], &(*ll)[0], sizeof (void *) * (endpos + 1));
+   memmove (&ll->array[1], &ll->array[0], (sizeof *(ll->array)) * (endpos + 1));
 
-   (*ll)[0] = el;
+   ll->array[0] = el;
+   ll->nitems++;
 
-   return (*ll)[0];
+   return el;
 }
 
-void *ds_array_remove_tail (void ***ll)
+void *ds_array_remove_tail (ds_array_t *ll)
 {
-   if(!ll || !(*ll) || !(*ll)[0])
+   if(!ll || !ll->array[0] || ll->nitems == 0)
       return NULL;
 
-   uint8_t *memblock = (uint8_t *)(*ll);
-   size_t nitems = (size_t)memblock[-(sizeof (size_t))];
-   nitems--;
+   void *ret = ll->array[ll->nitems - 1];
 
-   void *ret = (*ll)[nitems];
-   (*ll)[nitems] = NULL;
-   memcpy (&memblock[-(sizeof (size_t))], &nitems, sizeof nitems);
+   ll->nitems--;
+   ll->array[ll->nitems] = NULL;
 
    return ret;
 }
 
-void *ds_array_remove_head (void ***ll)
+void *ds_array_remove_head (ds_array_t *ll)
 {
    return ds_array_remove (ll, 0);
 }
 
 
-void *ds_array_remove (void ***ll, size_t index)
+void *ds_array_remove (ds_array_t *ll, size_t index)
 {
-   if (!ll || !*ll)
+   if (!ll || ll->nitems == 0)
       return NULL;
 
-   size_t len = ds_array_length (*ll);
-   if (index >= len)
+   if (index >= ll->nitems)
       return NULL;
 
-   void *ret = (*ll)[index];
+   void *ret = ll->array[index];
 
-   memmove (&(*ll)[index], &(*ll)[index + 1],
-            (sizeof (void *)) * (len - index));
-
-   uint8_t *memblock = (uint8_t *)(*ll);
-   len--;
-   memcpy (&memblock[-sizeof (size_t)], &len, sizeof len);
+   memmove (&ll->array[index], &ll->array[index + 1],
+            (sizeof (void *)) * (ll->nitems - index));
 
    return ret;
 }
