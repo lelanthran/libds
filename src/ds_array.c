@@ -103,18 +103,14 @@ static bool ds_array_grow (ds_array_t *ll, size_t nelems)
 
 void ds_array_shrink_to_fit (ds_array_t *ll)
 {
-#if 0
-   uint8_t *memblock = (uint8_t *)(*ll);
-   size_t nitems = (size_t)memblock[-(sizeof (size_t))];
-   size_t newsize = (sizeof (size_t)) + ((nitems + sizeof (void *)) * sizeof (void*));
+   if (!ll)
+      return;
 
-   uint8_t *tmp = realloc (&memblock[-(sizeof (size_t))], newsize);
+   void **tmp = realloc (ll->array, (sizeof *ll->array) * (ll->nitems + 1));
    if (!tmp)
       return;
-#endif
 
-   // TODO:
-   // (*ll) = (void **)&tmp[-sizeof (size_t)];
+   ll->array = tmp;
 }
 
 void *ds_array_ins_tail (ds_array_t *ll, void *el)

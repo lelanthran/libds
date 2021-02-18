@@ -10,7 +10,7 @@
 /* ************************************************************************ */
 struct nvlist_t {
    char *name;
-   void **array_values;
+   ds_array_t *array_values;
 };
 
 static void nvlist_del (struct nvlist_t *nvl)
@@ -53,7 +53,7 @@ static bool nvlist_append (struct nvlist_t *nvl, const char *value)
       }
    }
 
-   if (!(ds_array_ins_head (&nvl->array_values, ds_str_dup (value))))
+   if (!(ds_array_ins_head (nvl->array_values, ds_str_dup (value))))
       return false;
 
    return true;
@@ -64,8 +64,8 @@ static bool nvlist_append (struct nvlist_t *nvl, const char *value)
 struct ds_plist_t {
    char         *name;
    ds_plist_t   *parent;
-   void        **array_children;
-   void        **array_elements;
+   ds_array_t   *array_children;
+   ds_array_t   *array_elements;
 };
 
 
@@ -128,7 +128,7 @@ bool ds_plist_child_add (ds_plist_t *parent, ds_plist_t *child)
    if (!parent || !child)
       return true;
 
-   if (!(ds_array_ins_tail (&parent->array_children, child)))
+   if (!(ds_array_ins_tail (parent->array_children, child)))
       return false;
 
    return true;
@@ -143,7 +143,7 @@ void ds_plist_child_remove (ds_plist_t *parent, ds_plist_t *child)
    for (size_t i=0; i<nchildren; i++) {
       ds_plist_t *pchild = ds_array_index (parent->array_children, i);
       if (pchild == child) {
-         ds_array_remove (&parent->array_children, i);
+         ds_array_remove (parent->array_children, i);
          break;
       }
    }
@@ -247,7 +247,7 @@ bool ds_plist_value_append (ds_plist_t *plist, const char *name, const char *val
       goto errorexit;
    }
 
-   if (!(ds_array_ins_tail (&plist->array_elements, record))) {
+   if (!(ds_array_ins_tail (plist->array_elements, record))) {
       nvlist_del (record);
       goto errorexit;
    }
