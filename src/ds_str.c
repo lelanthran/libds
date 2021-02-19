@@ -352,7 +352,7 @@ char *ds_str_substring (const char *src, size_t from_position, size_t nchars)
    if (lastchar > srclen)
       lastchar = srclen;
 
-   char *ret = calloc (1, (srclen - lastchar) + 2);
+   char *ret = calloc ((lastchar - from_position) + 2, 1);
    if (!ret)
       return NULL;
 

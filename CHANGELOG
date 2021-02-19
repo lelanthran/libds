@@ -1,6 +1,5 @@
 # v1.0.6 - ???
 
-
 # v1.0.5 - Thu 18 Feb 2021 16:53:25 SAST
 Additions
 1. Added a substring function to ds_str.h (ds_str_substring()).
