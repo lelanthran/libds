@@ -35,7 +35,8 @@ int main (void)
         *test_substring2 = NULL,
         *test_substring3 = NULL,
         *test_substring4 = NULL,
-        *test_substring5 = NULL;
+        *test_substring5 = NULL,
+        *test_substring6 = NULL;
 
    /* ******************************************************************* */
 
@@ -52,6 +53,9 @@ int main (void)
       goto errorexit;
    }
 
+   /* ******************************************************************* */
+
+   printf ("Start ds_str test, [v%s]\n", ds_version);
    /* ******************************************************************* */
 
    const char *more1[] = {
@@ -142,6 +146,7 @@ int main (void)
    test_substring3 = ds_str_substring (test_strsubst, len - 1, 5);
    test_substring4 = ds_str_substring (test_strsubst, len, 5);
    test_substring5 = ds_str_substring (test_strsubst, len + 1, 5);
+   test_substring6 = ds_str_substring (test_strsubst, 0, len);
 
 
    /* ******************************************************************* */
@@ -177,6 +182,7 @@ int main (void)
    printf ("test_substring3 (%zu, 5):   [%s]\n", len - 1, test_substring3);
    printf ("test_substring4 (%zu, 5):   [%s]\n", len, test_substring4);
    printf ("test_substring5 (%zu, 5):   [%s]\n", len + 1, test_substring5);
+   printf ("test_substring6 (%zu, 5):   [%s]\n", len + 1, test_substring6);
 
    ret = EXIT_SUCCESS;
 
@@ -209,6 +215,7 @@ errorexit:
    free (test_substring3);
    free (test_substring4);
    free (test_substring5);
+   free (test_substring6);
 
    return ret;
 }
