@@ -104,6 +104,8 @@ endif
 
 OUTDIR=debug
 
+INSTALL_PREFIX?=$(CURDIR)/..
+
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
 OUTDIR=debug
 endif
@@ -191,10 +193,14 @@ endif
 #
 ifneq (,$(findstring android,$(LD_PROG)))
 REAL_EXTRA_LIB_LDFLAGS=$(subst -lpthread,,$(EXTRA_LIB_LDFLAGS))
+else
+REAL_EXTRA_LIB_LDFLAGS=$(EXTRA_LIB_LDFLAGS)
 endif
 
 ifneq (,$(findstring android,$(LD_LIB)))
 REAL_EXTRA_PROG_LDFLAGS=$(subst -lpthread,,$(EXTRA_PROG_LDFLAGS))
+else
+REAL_EXTRA_PROG_LDFLAGS=$(EXTRA_PROG_LDFLAGS)
 endif
 
 # ######################################################################
@@ -263,6 +269,15 @@ real-help:
 	@$(ECHO) "clean-debug:         Clean a debug build (release is ignored)."
 	@$(ECHO) "clean-release:       Clean a release build (debug is ignored)."
 	@$(ECHO) "clean-all:           Clean everything."
+	@$(ECHO) ""
+	@$(ECHO) "Variables that can be set in build.conf or the environment."
+	@$(ECHO) "Defaults, if any, are displayed in parenthesis:"
+	@$(ECHO) "GCC:                 The C compiler executable."
+	@$(ECHO) "GXX:                 The C++ compiler executable."
+	@$(ECHO) "LD_PROG:             The program linker executable (default $$GCC)."
+	@$(ECHO) "LD_LIB:              The library linker executable (default $$GCC)."
+	@$(ECHO) "INSTALL_PREFIX:      The path to where the lib, include and bin dirs"
+	@$(ECHO) "                     would be created (default ../)."
 
 
 real-all:	$(OUTDIRS) $(DYNLIB) $(STCLIB) $(BINPROGS)
@@ -272,10 +287,20 @@ all:	$(SWIG_WRAPPERS) real-all
 	@ln -f -s $(STCLNK_TARGET) $(STCLNK_NAME)
 	@$(ECHO) "[$(CYAN)Soft linking$(NONE)]    [$(DYNLNK_TARGET)]"
 	@ln -f -s $(DYNLNK_TARGET) $(DYNLNK_NAME)
-	@$(ECHO) "[$(CYAN)Copying$(NONE)     ]    [ -> $(OUTDIR)/lib]"
-	@cp $(OUTLIB)/* $(OUTDIR)/lib
 	@$(ECHO) "[$(CYAN)Copying$(NONE)     ]    [ -> ./include/]"
 	@cp -R $(HEADERS) include
+	@mkdir -p $(INSTALL_PREFIX)/bin/$(TARGET)
+	@mkdir -p $(INSTALL_PREFIX)/lib/$(TARGET)
+	@mkdir -p $(INSTALL_PREFIX)/obs/$(TARGET)
+	@mkdir -p $(INSTALL_PREFIX)/include/$(TARGET)
+	@$(ECHO) "[$(CYAN)Copying$(NONE)     ]    [ $(OUTBIN) -> $(INSTALL_PREFIX)/bin/$(TARGET)]"
+	@cp $(OUTBIN)/* $(INSTALL_PREFIX)/bin/$(TARGET)
+	@$(ECHO) "[$(CYAN)Copying$(NONE)     ]    [ $(OUTLIB)-> $(INSTALL_PREFIX)/obs/$(TARGET)]"
+	@cp $(OUTLIB)/* $(INSTALL_PREFIX)/lib/$(TARGET)
+	@$(ECHO) "[$(CYAN)Copying$(NONE)     ]    [ $(OUTOBS) -> $(INSTALL_PREFIX)/lib/$(TARGET)]"
+	@cp $(OUTOBS)/* $(INSTALL_PREFIX)/obs/$(TARGET)
+	@$(ECHO) "[$(CYAN)Copying$(NONE)     ]    [ include -> $(INSTALL_PREFIX)/include/$(TARGET)/]"
+	@cp -R include/* $(INSTALL_PREFIX)/include/$(TARGET)
 	@$(ECHO) "$(INV)$(YELLOW)Build completed: `date`$(NONE)"
 	@$(ECHO) "$(YELLOW)Total build time:  $$((`date +"%s"` - $(START_TIME)))s"\
 		"$(NONE)"
@@ -367,7 +392,7 @@ debian-package:
 debug-package:	debug debian-package
 release-package:	release debian-package
 
-swig_prep:
+swig_prep: swig-input.swig
 	@$(ECHO) "[$(CYAN)SWIG$(NONE)        ]    [ <- ./src/"'*.h]'
 	@mkdir -p wrappers
 
