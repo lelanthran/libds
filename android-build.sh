@@ -186,6 +186,7 @@ for X in $TARGET_MACHINE; do
    export TARGET_EABI=android
    if [ `echo $X | grep -c arm` -gt 0 ]; then
       export TARGET_EABI=androideabi
+      echo "TARGET_EABI $TARGET_EABI"
    fi
 
    for Y in $ANDROID_LEVEL; do
@@ -205,7 +206,7 @@ for X in $TARGET_MACHINE; do
       export GCC=$ANDROID_GCC
       export GXX=$ANDROID_GXX
       export LD_PROG=$ANDROID_GCC
-      export LD_LIB=$ANDROID_GXX
+      export LD_LIB=$ANDROID_GCC
 
       for Z in $MAKE_TARGETS; do
          make $Z -j 4
