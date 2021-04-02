@@ -65,7 +65,7 @@ size_t ds_array_length (const ds_array_t *ll)
    return ll->nitems;
 }
 
-void *ds_array_index (const ds_array_t *ll, size_t i)
+void *ds_array_get (const ds_array_t *ll, size_t i)
 {
    if (!ll)
       return NULL;

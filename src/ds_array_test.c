@@ -55,7 +55,7 @@ int main (void)
    size_t dsa_len = ds_array_length (dsa);
    for (size_t i=0; i<dsa_len; i++) {
       // Note: Can also simply use "dsa[i]"
-      char *string = ds_array_index (dsa, i);
+      char *string = ds_array_get (dsa, i);
       LOG_MSG ("[%zu]:[%s]\n", i, string);
    }
 

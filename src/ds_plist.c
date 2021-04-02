@@ -47,7 +47,7 @@ static bool nvlist_append (struct nvlist_t *nvl, const char *value)
 
    size_t nitems = ds_array_length (nvl->array_values);
    for (size_t i=0; i<nitems; i++) {
-      const char *item = ds_array_index (nvl->array_values, i);
+      const char *item = ds_array_get (nvl->array_values, i);
       if ((strcmp (item, value))==0) {
          return true;
       }
@@ -141,7 +141,7 @@ void ds_plist_child_rm (ds_plist_t *parent, ds_plist_t *child)
 
    size_t nchildren = ds_array_length (parent->array_children);
    for (size_t i=0; i<nchildren; i++) {
-      ds_plist_t *pchild = ds_array_index (parent->array_children, i);
+      ds_plist_t *pchild = ds_array_get (parent->array_children, i);
       if (pchild == child) {
          ds_array_rm (parent->array_children, i);
          break;
@@ -162,17 +162,17 @@ static void plist_dump (ds_plist_t *plist, FILE *outf, size_t indent)
                   plist->name, nelements, nchildren);
 
    for (size_t i=0; i<nelements; i++) {
-      struct nvlist_t *value = ds_array_index (plist->array_elements, i);
+      struct nvlist_t *value = ds_array_get (plist->array_elements, i);
       PRINT_INDENT (indent + 3);
       fprintf (outf, "name [%s]: ", value->name);
       size_t nvalues = ds_array_length (value->array_values);
       for (size_t j=0; j<nvalues; j++) {
-         fprintf (outf, "[%s] ", (char *)ds_array_index (value->array_values, j));
+         fprintf (outf, "[%s] ", (char *)ds_array_get (value->array_values, j));
       }
       fprintf (outf, "\n");
    }
    for (size_t i=0; i<nchildren; i++) {
-      ds_plist_t *child = ds_array_index (plist->array_children, i);
+      ds_plist_t *child = ds_array_get (plist->array_children, i);
       plist_dump (child, outf, indent + 3);
    }
    // TODO: Children
@@ -214,7 +214,7 @@ static struct nvlist_t *plist_find_values (ds_plist_t *plist, const char *name)
 {
    size_t nelements = ds_array_length (plist->array_elements);
    for (size_t i=0; i<nelements; i++) {
-      struct nvlist_t *element = ds_array_index (plist->array_elements, i);
+      struct nvlist_t *element = ds_array_get (plist->array_elements, i);
       if ((strcmp (element->name, name))==0) {
          return element;
       }

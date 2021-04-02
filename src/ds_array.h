@@ -19,7 +19,7 @@ extern "C" {
    ds_array_t *ds_array_copy (const ds_array_t *src, size_t from_index, size_t to_index);
 
    size_t ds_array_length (const ds_array_t *ll);
-   void *ds_array_index (const ds_array_t *ll, size_t i);
+   void *ds_array_get (const ds_array_t *ll, size_t i);
    void ds_array_iterate (const ds_array_t *ll, void (*fptr) (void *));
 
    void *ds_array_ins_tail (ds_array_t *ll, void *el);
