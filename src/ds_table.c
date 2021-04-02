@@ -8,9 +8,16 @@ struct ds_table_t {
    void ***data;
 };
 
-ds_table_t *ds_table_new (void)
+ds_table_t *ds_table_new (size_t ncols)
 {
+   if (!ncols)
+      return NULL;
+
    ds_table_t *ret = calloc (1, sizeof *ret);
+
+   if (ret)
+      ret->ncols = ncols;
+
    return ret;
 }
 
