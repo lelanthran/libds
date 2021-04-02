@@ -1,4 +1,4 @@
-%module skeleton
+%module libds
 %include "src/ds_array.h"
 %include "src/ds_hmap.h"
 %include "src/ds_ll.h"
