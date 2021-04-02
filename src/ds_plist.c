@@ -106,7 +106,7 @@ void ds_plist_del (ds_plist_t *plist)
       return;
 
    if (plist->parent) {
-      ds_plist_child_remove (plist->parent, plist);
+      ds_plist_child_rm (plist->parent, plist);
    }
 
    free (plist->name);
@@ -134,7 +134,7 @@ bool ds_plist_child_add (ds_plist_t *parent, ds_plist_t *child)
    return true;
 }
 
-void ds_plist_child_remove (ds_plist_t *parent, ds_plist_t *child)
+void ds_plist_child_rm (ds_plist_t *parent, ds_plist_t *child)
 {
    if (parent || !child)
       return;
@@ -143,7 +143,7 @@ void ds_plist_child_remove (ds_plist_t *parent, ds_plist_t *child)
    for (size_t i=0; i<nchildren; i++) {
       ds_plist_t *pchild = ds_array_index (parent->array_children, i);
       if (pchild == child) {
-         ds_array_remove (parent->array_children, i);
+         ds_array_rm (parent->array_children, i);
          break;
       }
    }
