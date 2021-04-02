@@ -16,7 +16,7 @@ extern "C" {
    void ds_plist_del (ds_plist_t *plist);
 
    bool ds_plist_child_add (ds_plist_t *parent, ds_plist_t *child);
-   void ds_plist_child_remove (ds_plist_t *parent, ds_plist_t *child);
+   void ds_plist_child_rm (ds_plist_t *parent, ds_plist_t *child);
 
    // For diagnostics during development. A NULL file pointer sends the output to stdout
    void ds_plist_dump (ds_plist_t *plist, FILE *outf);

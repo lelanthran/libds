@@ -144,7 +144,7 @@ void *ds_array_ins_head (ds_array_t *ll, void *el)
    return el;
 }
 
-void *ds_array_remove_tail (ds_array_t *ll)
+void *ds_array_rm_tail (ds_array_t *ll)
 {
    if(!ll || !ll->array[0] || ll->nitems == 0)
       return NULL;
@@ -157,13 +157,13 @@ void *ds_array_remove_tail (ds_array_t *ll)
    return ret;
 }
 
-void *ds_array_remove_head (ds_array_t *ll)
+void *ds_array_rm_head (ds_array_t *ll)
 {
-   return ds_array_remove (ll, 0);
+   return ds_array_rm (ll, 0);
 }
 
 
-void *ds_array_remove (ds_array_t *ll, size_t index)
+void *ds_array_rm (ds_array_t *ll, size_t index)
 {
    if (!ll || ll->nitems == 0)
       return NULL;

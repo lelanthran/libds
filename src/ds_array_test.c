@@ -73,14 +73,14 @@ int main (void)
    LOG_MSG ("===================================\n");
 
    for (size_t i=0; i<2; i++) {
-      if (!(ds_array_remove_tail (dsa))) {
+      if (!(ds_array_rm_tail (dsa))) {
          LOG_MSG ("Failed to remove tail element [%zu]\n", i);
          goto errorexit;
       }
    }
 
    for (size_t i=0; i<2; i++) {
-      if (!(ds_array_remove_head (dsa))) {
+      if (!(ds_array_rm_head (dsa))) {
          LOG_MSG ("Failed to remove head element [%zu]\n", i);
          goto errorexit;
       }
@@ -92,7 +92,7 @@ int main (void)
    dsa_len = ds_array_length (dsa);
 
    for (size_t i=0; i<dsa_len; i+=3) {
-      if (!(ds_array_remove (dsa, i))) {
+      if (!(ds_array_rm (dsa, i))) {
          LOG_MSG ("Failed to remove element [%zu]:[%s]\n",
                   i, "TODO");
                           // i, (char *)dsa[i]);
@@ -105,7 +105,7 @@ int main (void)
 
    char *tmp;
 
-   while ((tmp = ds_array_remove_head (dsa))) {
+   while ((tmp = ds_array_rm_head (dsa))) {
       LOG_MSG ("[%s]\n", tmp);
    }
 
