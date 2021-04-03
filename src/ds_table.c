@@ -82,10 +82,25 @@ bool ds_table_row_new_last (ds_table_t *table)
    return ds_table_row_new (table, table->nrows + 1);
 }
 
+void ds_table_row_del (ds_table_t *table, size_t row)
+{
+   if (!table)
+      return;
 
-void ds_table_row_del (ds_table_t *table, size_t row);
+   if (row >= table->nrows)
+      row = table->nrows - 1;
 
-#if 0
+   size_t count = table->nrows - row;
+
+   if (count) {
+      free (table->data[row]);
+      memmove (&table->data[row], &table->data[row + 1],
+               count * sizeof *table->data);
+   }
+   table->nrows--;
+}
+
+
 void ds_table_row_del_first (ds_table_t *table)
 {
    ds_table_row_del (table, 0);
@@ -95,7 +110,6 @@ void ds_table_row_del_last (ds_table_t *table)
 {
    ds_table_row_del (table, (size_t)-1);
 }
-#endif
 
 
 void ds_table_set (const ds_table_t *table, size_t row, size_t col, void *el)

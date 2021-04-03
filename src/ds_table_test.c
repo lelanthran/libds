@@ -94,11 +94,9 @@ int main (void)
 
    print_table (table1);
 
-#if 0
    ds_table_row_del_first (table1);
    ds_table_row_del_last (table1);
    ds_table_row_del (table1, 2);
-#endif
 
    print_table (table1);
 
