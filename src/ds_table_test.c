@@ -62,7 +62,7 @@ int main (void)
    }
 
    for (size_t i=0; i<1000; i++) {
-      size_t index = sizeof test1 / sizeof test1[0];
+      size_t index = i % (sizeof test1 / sizeof test1[0]);
       size_t nrows = ds_table_nrows (table1);
       LOG ("pre: Table nrows: %zu\n", nrows);
       if (i % 2) {
