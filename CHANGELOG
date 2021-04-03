@@ -1,6 +1,7 @@
 # v1.0.6 - ???
 Features
 1. Added scripts to build for Android.
+2. Added ds_table module for tabular data (2D arrays).
 
 # v1.0.5 - Thu 18 Feb 2021 16:53:25 SAST
 Additions
