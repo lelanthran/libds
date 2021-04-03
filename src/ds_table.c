@@ -59,9 +59,10 @@ bool ds_table_row_new (ds_table_t *table, size_t index)
       return false;
 
    tmp[newlen-1] = NULL;
-   tmp[newlen-2] = calloc (table->ncols + 1, sizeof *tmp[0]);
    memmove (&tmp[index + 1], &tmp[index],
             (sizeof tmp[0]) * (table->nrows - index));
+
+   tmp[index] = calloc (table->ncols + 1, sizeof *tmp[0]);
 
    table->data = tmp;
    table->nrows++;
