@@ -14,7 +14,7 @@ static void print_table (ds_table_t *table)
    size_t nrows = ds_table_nrows (table);
    size_t ncols = ds_table_ncols (table);
 
-   printf ("================================\n");
+   printf ("================================ %zu ================================\n", nrows);
    for (size_t i=0; i<nrows; i++) {
       printf ("[%zu] ", i);
       for (size_t j=0; j<ncols; j++) {
@@ -61,24 +61,35 @@ int main (void)
       goto errorexit;
    }
 
-   for (size_t i=0; i<sizeof test1 / sizeof test1[0]; i++) {
+   for (size_t i=0; i<1000; i++) {
+      size_t index = sizeof test1 / sizeof test1[0];
+      size_t nrows = ds_table_nrows (table1);
+      LOG ("pre: Table nrows: %zu\n", nrows);
       if (i % 2) {
          if (!(ds_table_row_new_last (table1))) {
             LOG ("Failed to create row %zu\n", i);
             goto errorexit;
          }
+         size_t nrows = ds_table_nrows (table1) - 1;
+         LOG ("post: Table nrows: %zu\n", nrows);
+         ds_table_set (table1, nrows, 0, test1[index].c1);
+         ds_table_set (table1, nrows, 1, test1[index].c2);
+         ds_table_set (table1, nrows, 2, test1[index].c3);
+         ds_table_set (table1, nrows, 3, test1[index].c4);
+         ds_table_set (table1, nrows, 4, test1[index].c5);
+         ds_table_set (table1, nrows, 5, test1[index].c6);
       } else {
          if (!(ds_table_row_new_first (table1))) {
             LOG ("Failed to create row %zu\n", i);
             goto errorexit;
          }
+         ds_table_set (table1, 0, 0, test1[index].c1);
+         ds_table_set (table1, 0, 1, test1[index].c2);
+         ds_table_set (table1, 0, 2, test1[index].c3);
+         ds_table_set (table1, 0, 3, test1[index].c4);
+         ds_table_set (table1, 0, 4, test1[index].c5);
+         ds_table_set (table1, 0, 5, test1[index].c6);
       }
-      ds_table_set (table1, i, 0, test1[i].c1);
-      ds_table_set (table1, i, 1, test1[i].c2);
-      ds_table_set (table1, i, 2, test1[i].c3);
-      ds_table_set (table1, i, 3, test1[i].c4);
-      ds_table_set (table1, i, 4, test1[i].c5);
-      ds_table_set (table1, i, 5, test1[i].c6);
    }
 
    print_table (table1);
