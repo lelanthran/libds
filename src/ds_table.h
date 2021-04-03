@@ -38,6 +38,8 @@ extern "C" {
    // Delete a row. When a row is deleted, all subsequent rows are shifted up. Deleting a row
    // does not delete the data objects stored in the row - the caller is responsible for
    // deleting objects that are stored in the table.
+   //
+   // Deletions of rows that are out of range results in no actions being performed.
    void ds_table_row_del (ds_table_t *table, size_t row);
    void ds_table_row_del_first (ds_table_t *table);
    void ds_table_row_del_last (ds_table_t *table);
