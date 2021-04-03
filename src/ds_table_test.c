@@ -56,7 +56,7 @@ int main (void)
 
    printf ("Starting ds_table tests (%s)\n", ds_version);
 
-   if (!(table1 = ds_table_new (3))) {
+   if (!(table1 = ds_table_new (8))) {
       LOG ("Failed to create new table\n");
       goto errorexit;
    }
@@ -74,27 +74,20 @@ int main (void)
          }
       }
       ds_table_set (table1, i, 0, test1[i].c1);
-      ds_table_set (table1, i, 0, test1[i].c2);
-      ds_table_set (table1, i, 0, test1[i].c3);
-      ds_table_set (table1, i, 0, test1[i].c4);
-      ds_table_set (table1, i, 0, test1[i].c5);
-      ds_table_set (table1, i, 0, test1[i].c6);
+      ds_table_set (table1, i, 1, test1[i].c2);
+      ds_table_set (table1, i, 2, test1[i].c3);
+      ds_table_set (table1, i, 3, test1[i].c4);
+      ds_table_set (table1, i, 4, test1[i].c5);
+      ds_table_set (table1, i, 5, test1[i].c6);
    }
 
    print_table (table1);
 
-   for (size_t i=0; i<sizeof test1 / sizeof test1[0]; i += 2) {
-      if (!(ds_table_row_new_last (table1))) {
-         LOG ("Failed to create row %zu\n", i);
-         goto errorexit;
-      }
-      ds_table_row_del (table1, i);
-      ds_table_row_del (table1, i);
-      ds_table_row_del (table1, i);
-      ds_table_row_del (table1, i);
-      ds_table_row_del (table1, i);
-      ds_table_row_del (table1, i);
-   }
+#if 0
+   ds_table_row_del_first (table1);
+   ds_table_row_del_last (table1);
+   ds_table_row_del (table1, 2);
+#endif
 
    print_table (table1);
 
