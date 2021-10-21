@@ -103,6 +103,14 @@ endif
 # Set the output directories, output filenames
 
 OUTDIR=debug
+ifeq ($(INSTALL_PREFIX),)
+$(warning *********************************************************************)
+$(warning * $$INSTALL_PREFIX not defined!                                      *)
+$(warning * If you get include path or link errors, set the $$INSTALL_PREFIX   *)
+$(warning * and try again.                                                    *)
+$(warning *********************************************************************)
+$(warning Using '$(CURDIR)/..' as $$INSTALL_PREFIX)
+endif
 
 INSTALL_PREFIX?=$(CURDIR)/..
 
