@@ -2,6 +2,7 @@
 Features
 1. Added scripts to build for Android.
 2. Added ds_table module for tabular data (2D arrays).
+3. Performance fixes to ds_str_cat().
 
 # v1.0.5 - Thu 18 Feb 2021 16:53:25 SAST
 Additions
