@@ -97,14 +97,25 @@ char *ds_str_vappend (char **dst, const char *s1, va_list ap)
    if (!(ret = ds_str_cat ((*dst), s1, NULL)))
       goto errorexit;
 
+   size_t idx = strlen (ret);
    while ((s1 = va_arg (ap, char *))!=NULL) {
-      char *tmp = ds_str_cat (ret, s1, NULL);
-      if (!tmp)
-         goto errorexit;
+      // char *tmp = ds_str_cat (ret, s1, NULL);
+      // if (!tmp)
+      //    goto errorexit;
 
-      free (ret);
+      size_t s1_len = strlen (s1);
+      size_t newlen = idx + s1_len;
+      char *tmp = realloc (ret, newlen + 1);
+      if (!tmp) {
+         free (ret);
+         return NULL;
+      }
       ret = tmp;
+      memcpy (&ret[idx], s1, s1_len);
+      idx += s1_len;
    }
+
+   ret[idx] = 0;
 
    free (*dst);
    (*dst) = ret;
