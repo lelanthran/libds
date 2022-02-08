@@ -2,6 +2,7 @@
 Features
 1. Added scripts to build for Android.
 2. Added ds_table module for tabular data (2D arrays).
+3. Performance fixes to ds_str_cat().
 
 Bugfixes
 1. Bug in ds_str_substring() when substring is the length of entire source
