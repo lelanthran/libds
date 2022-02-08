@@ -1,7 +1,10 @@
 
+#define _POSIX_C_SOURCE 199309L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "ds_str.h"
 
@@ -183,6 +186,84 @@ int main (void)
    printf ("test_substring4 (%zu, 5):   [%s]\n", len, test_substring4);
    printf ("test_substring5 (%zu, 5):   [%s]\n", len + 1, test_substring5);
    printf ("test_substring6 (%zu, 5):   [%s]\n", len + 1, test_substring6);
+
+   printf ("Recording time of large string concatenation\n");
+   struct timespec tp_start;
+   int rc = clock_gettime (CLOCK_REALTIME, &tp_start);
+   if (rc != 0) {
+      printf ("Failed to get CLOCK_REALTIME start value (ns)\n");
+      goto errorexit;
+   }
+
+   free (test_append);
+   test_append = NULL;
+   for (size_t i=0; i<70000; i++) {
+      ds_str_append (&test_append, "The Quick Brown Fox Jumped Over The Lazy Dog\n", NULL);
+   }
+   struct timespec tp_end;
+   rc = clock_gettime (CLOCK_REALTIME, &tp_end);
+   if (rc != 0) {
+      printf ("Failed to get CLOCK_REALTIME end value (ns)\n");
+      goto errorexit;
+   }
+
+   double append_end_time = (tp_end.tv_sec + (tp_end.tv_nsec/1000000000.0));
+   double append_start_time = (tp_start.tv_sec + (tp_start.tv_nsec/1000000000.0));
+   double append_elapsed_time = append_end_time - append_start_time;
+
+   rc = clock_gettime (CLOCK_REALTIME, &tp_start);
+   if (rc != 0) {
+      printf ("Failed to get CLOCK_REALTIME start value (ns)\n");
+      goto errorexit;
+   }
+
+   free (test_append);
+   test_append = NULL;
+
+   free (test_cat);
+   test_cat = ds_str_dup ("a");
+
+   for (size_t i=0; i<5; i++) {
+      char *tmp = ds_str_cat (test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              test_cat, test_cat, test_cat, test_cat, test_cat,
+                              NULL);
+      if (!tmp) {
+         printf ("Failed to allocate memory for large string cat\n");
+         goto errorexit;
+      }
+      free (test_cat);
+      test_cat = tmp;
+   }
+
+   rc = clock_gettime (CLOCK_REALTIME, &tp_end);
+   if (rc != 0) {
+      printf ("Failed to get CLOCK_REALTIME end value (ns)\n");
+      goto errorexit;
+   }
+
+   double cat_end_time = (tp_end.tv_sec + (tp_end.tv_nsec/1000000000.0));
+   double cat_start_time = (tp_start.tv_sec + (tp_start.tv_nsec/1000000000.0));
+   double cat_elapsed_time = cat_end_time - cat_start_time;
+
+   printf ("Elapsed time for large string append: %lf\n", append_elapsed_time);
+   printf ("Elapsed time for large string cat: %lf\n", cat_elapsed_time);
 
    ret = EXIT_SUCCESS;
 

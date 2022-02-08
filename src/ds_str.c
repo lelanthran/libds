@@ -49,10 +49,15 @@ char *ds_str_vcat (const char *src, va_list ap)
    *ret = 0;
 
    tmp = src;
+   size_t idx = strlen (ret);
    while (tmp) {
-      strcat (ret, tmp);
+      // strcat (ret, tmp);
+      size_t tmplen = strlen (tmp);
+      memcpy (&ret[idx], tmp, tmplen);
+      idx += tmplen;
       tmp = va_arg (ap, const char *);
    }
+   ret[idx] = 0;
 
    error = false;
 
