@@ -315,7 +315,7 @@ bool ds_hmap_get (ds_hmap_t *hm, const void *key,  size_t keylen,
    if (!hm)
       return NULL;
 
-   if (!key || !data) {
+   if (!key) {
       hm->errnum = ds_hmap_EBADPARAM;
       return NULL;
    }
