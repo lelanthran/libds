@@ -4,6 +4,12 @@ Features
 2. Added ds_table module for tabular data (2D arrays).
 3. Performance fixes to ds_str_cat().
 
+Bugfixes
+1. Bug in ds_str_substring() when substring is the length of entire source
+   string.
+2. ds_hmap_get() was not usable for checking existence of a key due to
+   returning false if no value parameter was supplied.
+
 # v1.0.5 - Thu 18 Feb 2021 16:53:25 SAST
 Additions
 1. Added a substring function to ds_str.h (ds_str_substring()).
