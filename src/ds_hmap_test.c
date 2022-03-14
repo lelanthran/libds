@@ -33,6 +33,17 @@ static void print_stats (ds_hmap_t *hm, const char *msg)
    printf ("---------------------------------------------\n");
 }
 
+static void print_kv (const void *key, size_t keylen, void *data, size_t datalen,
+                      void *extra_param)
+{
+   FILE *outf = extra_param;
+   const char *name = key;
+   const char *value = data;
+
+   fprintf (outf, "[name:%s] = [value:%s]\n", name, value);
+}
+
+
 static bool small_test (void)
 {
    bool error = true;
@@ -175,6 +186,11 @@ static bool small_test (void)
       }
    }
    printf ("******************* Removing complete ******************** \n");
+   printf ("******************* Testing Iteration ******************** \n");
+
+   ds_hmap_iterate (hm, print_kv, stdout);
+
+   printf ("****************** Iteration Complete ******************** \n");
 
    nkeys = ds_hmap_keys (hm, (void ***)&keys, &keylens);
    if (nkeys == 0) {

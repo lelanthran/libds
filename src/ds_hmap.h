@@ -77,6 +77,13 @@ extern "C" {
    bool ds_hmap_get (ds_hmap_t *hm, const void *key,  size_t keylen,
                                     void **data,      size_t *datalen);
 
+   // Iterate across the hashmap in an unspecified order and call fptr() for each
+   // key/value pair.
+   void ds_hmap_iterate (ds_hmap_t *hm, void (*fptr) (const void *key, size_t keylen,
+                                                      void *value, size_t value_len,
+                                                      void *extra_param),
+                                        void *extra_param);
+
    // Removes an item from the hashmap. The data stored in the value field
    // still remains the responsibility of the caller.
    void ds_hmap_remove (ds_hmap_t *hm, const void *key, size_t keylen);
