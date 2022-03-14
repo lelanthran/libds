@@ -338,6 +338,23 @@ errorexit:
    return !error;
 }
 
+void ds_hmap_iterate (ds_hmap_t *hm, void (*fptr) (const void *key, size_t keylen,
+                                                   void *value, size_t value_len,
+                                                   void *extra_param),
+                                     void *extra_param)
+{
+   if (!hm || !fptr)
+      return;
+
+   for (size_t i=0; i<hm->nbuckets; i++) {
+      for (size_t j=0; j<hm->buckets[i].nelems; j++) {
+         fptr (hm->buckets[i].elems[j].key, hm->buckets[i].elems[j].keylen,
+               hm->buckets[i].elems[j].data, hm->buckets[i].elems[j].datalen,
+               extra_param);
+      }
+   }
+}
+
 void ds_hmap_remove (ds_hmap_t *hm, const void *key, size_t keylen)
 {
    if (!hm)
