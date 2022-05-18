@@ -26,7 +26,7 @@ int main (void)
    ret = EXIT_SUCCESS;
 errorexit:
 
-   ds_plist_del (parent_list);
+   ds_plist_del (parent_list, NULL);
 
    return ret;
 }

@@ -13,11 +13,18 @@ struct nvlist_t {
    ds_array_t *array_values;
 };
 
-static void nvlist_del (struct nvlist_t *nvl)
+static void lfree (void *p, void *param)
 {
+   (void)param;
+   free (p);
+}
+
+static void nvlist_del (struct nvlist_t *nvl, void *param)
+{
+   (void)param;
    if (nvl) {
       free (nvl->name);
-      ds_array_iterate (nvl->array_values, free);
+      ds_array_iterate (nvl->array_values, lfree, NULL);
       ds_array_del (nvl->array_values);
       free (nvl);
    }
@@ -33,7 +40,7 @@ static struct nvlist_t *nvlist_new (const char *name)
    }
 
    if (!ret || !ret->name || !ret->array_values) {
-      nvlist_del (ret);
+      nvlist_del (ret, NULL);
       ret = NULL;
    }
 
@@ -93,15 +100,17 @@ ds_plist_t *ds_plist_new (ds_plist_t *parent, const char *name)
 errorexit:
 
    if (error) {
-      ds_plist_del (ret);
+      ds_plist_del (ret, NULL);
       ret = NULL;
    }
 
    return ret;
 }
 
-void ds_plist_del (ds_plist_t *plist)
+void ds_plist_del (ds_plist_t *plist, void *param)
 {
+   (void)param;
+
    if (!plist)
       return;
 
@@ -112,11 +121,11 @@ void ds_plist_del (ds_plist_t *plist)
    free (plist->name);
 
    // TODO: Remove all the elements
-   ds_array_iterate (plist->array_elements, (void (*) (void *))nvlist_del);
+   ds_array_iterate (plist->array_elements, (void (*) (void *, void *))nvlist_del, NULL);
    ds_array_del (plist->array_elements);
 
    // TODO: Remove all the children
-   ds_array_iterate (plist->array_children, (void (*) (void *))ds_plist_del);
+   ds_array_iterate (plist->array_children, (void (*) (void *, void *))ds_plist_del, NULL);
    ds_array_del (plist->array_children);
 
    free (plist);
@@ -243,12 +252,12 @@ bool ds_plist_value_append (ds_plist_t *plist, const char *name, const char *val
       goto errorexit;
 
    if (!(nvlist_append (record, value))) {
-      nvlist_del (record);
+      nvlist_del (record, NULL);
       goto errorexit;
    }
 
    if (!(ds_array_ins_tail (plist->array_elements, record))) {
-      nvlist_del (record);
+      nvlist_del (record, NULL);
       goto errorexit;
    }
 

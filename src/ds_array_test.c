@@ -9,10 +9,12 @@
    printf (__VA_ARGS__);\
 } while (0)
 
-static void print_string (void *arg)
+static void print_string (void *arg, void *param)
 {
    char *s = arg;
-   LOG_MSG ("->[%s]\n", s);
+   FILE *of = param;
+   fprintf (of, "[%s:%i] ", __FILE__, __LINE__);\
+   fprintf (of, "->[%s]\n", s);
 }
 
 int main (void)
@@ -69,7 +71,7 @@ int main (void)
       }
    }
 
-   ds_array_iterate (dsa, print_string);
+   ds_array_iterate (dsa, print_string, stdout);
    LOG_MSG ("===================================\n");
 
    for (size_t i=0; i<2; i++) {
@@ -86,7 +88,7 @@ int main (void)
       }
    }
 
-   ds_array_iterate (dsa, print_string);
+   ds_array_iterate (dsa, print_string, stdout);
    LOG_MSG ("===================================\n");
 
    dsa_len = ds_array_length (dsa);
@@ -100,7 +102,7 @@ int main (void)
       }
    }
 
-   ds_array_iterate (dsa, print_string);
+   ds_array_iterate (dsa, print_string, stdout);
    LOG_MSG ("===================================\n");
 
    char *tmp;

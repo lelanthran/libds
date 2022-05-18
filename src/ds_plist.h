@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
    ds_plist_t *ds_plist_new (ds_plist_t *parent, const char *name);
-   void ds_plist_del (ds_plist_t *plist);
+   void ds_plist_del (ds_plist_t *plist, void *param);
 
    bool ds_plist_child_add (ds_plist_t *parent, ds_plist_t *child);
    void ds_plist_child_rm (ds_plist_t *parent, ds_plist_t *child);

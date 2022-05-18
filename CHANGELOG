@@ -4,6 +4,7 @@ Features
 2. Added ds_table module for tabular data (2D arrays).
 3. Performance fixes to ds_str_cat().
 4. Added iteration function for ds_hmap_t objects.
+5. Updated iteration function for ds_array to take extra parameter.
 
 Bugfixes
 1. Bug in ds_str_substring() when substring is the length of entire source
