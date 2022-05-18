@@ -76,13 +76,14 @@ void *ds_array_get (const ds_array_t *ll, size_t i)
    return ll->array[i];
 }
 
-void ds_array_iterate (const ds_array_t *ll, void (*fptr) (void *))
+void ds_array_iterate (const ds_array_t *ll,
+                       void (*fptr) (void *, void *), void *param)
 {
    if (!ll || !fptr)
       return;
 
    for (size_t i=0; ll->array[i]; i++) {
-      fptr (ll->array[i]);
+      fptr (ll->array[i], param);
    }
 }
 
