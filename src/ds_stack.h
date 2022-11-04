@@ -13,8 +13,9 @@ extern "C" {
    void ds_stack_del (ds_stack_t *st);
 
    bool ds_stack_push (ds_stack_t *st, const void *el);
-   void *ds_stack_pop (ds_stack_t *ds);
-   void *ds_stack_peek (ds_stack_t *ds);
+   void *ds_stack_pop (ds_stack_t *st);
+   void *ds_stack_peek (ds_stack_t *st);
+   void ds_stack_clear (ds_stack_t *st);
 
 
 

@@ -7,6 +7,8 @@
 
 int main (void)
 {
+   int ret = EXIT_FAILURE;
+
    static const char *elements[] = {
       "one",
       "two",
@@ -29,14 +31,14 @@ int main (void)
 
    for (size_t i=0; i<nelements; i++) {
       if (!(ds_stack_push (st, elements[i]))) {
-         printf ("Failed to push element [%zu:%s]\n", i, elements[i]);
+         printf ("Error 1. Push Failure [%zu:%s]\n", i, elements[i]);
       }
    }
 
    char *s = NULL;
 
    if ((strcmp ((s = ds_stack_peek (st)), elements[nelements - 1]))!=0) {
-      printf ("Peek failure, got [%s] expected [%s]\n",
+      printf ("Error: Peek failure, got [%s] expected [%s]\n",
                s, elements[nelements - 1]);
       goto cleanup;
    }
@@ -46,8 +48,21 @@ int main (void)
       printf ("Popped [%zu:%s]\n", i--, s);
    }
 
+   for (size_t i=0; i<nelements; i++) {
+      if (!(ds_stack_push (st, elements[i]))) {
+         printf ("Error 2. Push Failure [%zu:%s]\n", i, elements[i]);
+      }
+   }
 
+   ds_stack_clear (st);
+   if (ds_stack_peek (st)) {
+      printf ("Error: expected stack to be empty\n");
+      goto cleanup;
+   }
+
+   ret = EXIT_SUCCESS;
 cleanup:
    ds_stack_del (st);
-   return EXIT_SUCCESS;
+   printf ("%s\n", ret ? "FAIL" : "PASS");
+   return ret;
 }

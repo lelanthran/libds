@@ -62,3 +62,13 @@ void *ds_stack_peek (ds_stack_t *st)
 }
 
 
+void ds_stack_clear (ds_stack_t *st)
+{
+   if (!st)
+      return;
+
+   while ((ds_array_rm_tail (st->array)))
+      ;
+
+   ds_array_shrink_to_fit (st->array);
+}
