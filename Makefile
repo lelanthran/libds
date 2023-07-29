@@ -53,7 +53,7 @@ ifeq ($(strip $(BUILD_HOST)),Linux)
 	PLATFORM:=Windows
 	EXE_EXT:=.exe
 	LIB_EXT:=.dll
-	PLATFORM_LDFLAGS:=-L$(HOME)/lib -lmingw32 -lmsvcrt -lgcc -liphlpapi -lws2_32
+	PLATFORM_LDFLAGS:=-L$(HOME)/lib -lmsvcrt -lgcc -liphlpapi -lws2_32
 	PLATFORM_CFLAGS:= -D__USE_MINGW_ANSI_STDIO -DWINVER=0x0600 -D_WIN32_WINNT=0x0600
 	ECHO:=echo
 endif
@@ -68,7 +68,7 @@ endif
 	PLATFORM:=Windows
 	EXE_EXT:=.exe
 	LIB_EXT:=.dll
-	PLATFORM_LDFLAGS:=--L$(HOME)/lib lmingw32 -lws2_32 -lmsvcrt -lgcc
+	PLATFORM_LDFLAGS:=-L$(HOME)/lib -lmingw32 -lws2_32 -lmsvcrt -lgcc
 	PLATFORM_CFLAGS:= -D__USE_MINGW_ANSI_STDIO
 	ECHO:=echo -e
 endif
