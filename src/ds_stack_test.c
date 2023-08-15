@@ -20,7 +20,7 @@ int main (void)
 
    static size_t nelements = sizeof elements / sizeof elements[0];
 
-   printf ("Testing stack, %s\n", ds_version);
+   printf ("Testing stack\n");
 
    if (!st) {
       printf ("Failed to create new stack\n");

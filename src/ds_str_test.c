@@ -8,6 +8,25 @@
 
 #include "ds_str.h"
 
+#ifdef PLATFORM_Windows
+#include <windows.h>
+// Shamelessly copied verbatim from
+//      https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows
+
+#define CLOCK_REALTIME 0
+
+int clock_gettime(int ignore, struct timespec *spec)
+{
+    __int64 wintime = 0;
+    GetSystemTimeAsFileTime((FILETIME*)&wintime);
+    wintime -= 116444736000000000i64;  //1jan1601 to 1jan1970
+    spec->tv_sec = wintime / 10000000i64;           //seconds
+    spec->tv_nsec = wintime % 10000000i64 * 100;      //nano-seconds
+    return 0;
+}
+
+#endif
+
 int main (void)
 {
    int ret = EXIT_FAILURE;
@@ -58,7 +77,7 @@ int main (void)
 
    /* ******************************************************************* */
 
-   printf ("Start ds_str test, [v%s]\n", ds_version);
+   printf ("Start ds_str test\n");
    /* ******************************************************************* */
 
    const char *more1[] = {

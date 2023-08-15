@@ -54,7 +54,7 @@ int main (void)
 
    ds_table_t *table1 = NULL;
 
-   printf ("Starting ds_table tests (%s)\n", ds_version);
+   printf ("Starting ds_table tests\n");
 
    if (!(table1 = ds_table_new (8))) {
       LOG ("Failed to create new table\n");
