@@ -95,7 +95,7 @@ int main (void)
 
    /* ******************************************************************* */
 
-   float tmpflt = 10.0 / 3.0;
+   double tmpflt = 10.0 / 3.0;
    if (!(ds_str_printf (&test_printf, "[%s], %zu, %f, [%s]\n",
                            "START", (size_t)-1, tmpflt, "END"))) {
       fprintf (stderr, "printf: Failed\n");

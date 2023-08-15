@@ -173,7 +173,7 @@ static uint8_t rtab[256] = {
    0xe6, 0xe7, 0xf9, 0x0c, 0xa3, 0xe1, 0x2f,
 };
 
-static size_t make_hash (const void *k, size_t klen)
+static uint32_t make_hash (const void *k, size_t klen)
 {
    const uint8_t *tmp = k;
    uint32_t ret = 0;
@@ -313,11 +313,11 @@ bool ds_hmap_get (ds_hmap_t *hm, const void *key,  size_t keylen,
    bool error = true;
 
    if (!hm)
-      return NULL;
+      return false;
 
    if (!key) {
       hm->errnum = ds_hmap_EBADPARAM;
-      return NULL;
+      return false;
    }
 
    uint32_t hash = make_hash (key, keylen) % hm->nbuckets;
@@ -441,8 +441,8 @@ float ds_hmap_load (ds_hmap_t *hm)
    if (!hm)
       return 0.0;
 
-   float numer = ds_hmap_num_entries (hm);
-   float denom = ds_hmap_num_buckets (hm);
+   float numer = (float)ds_hmap_num_entries (hm);
+   float denom = (float)ds_hmap_num_buckets (hm);
    return numer / denom;
 }
 

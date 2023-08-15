@@ -285,10 +285,12 @@ int main (void)
       goto errorexit;
    }
 
+#if 0 // Temporarily moving this out as it expects stdin input.
    if (!(large_test ())) {
       fprintf (stderr, "Failed large test\n");
       goto errorexit;
    }
+#endif
 
 errorexit:
 

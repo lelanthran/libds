@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdint.h>
 
 #include "ds_str.h"
 
@@ -158,7 +159,10 @@ size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap)
    int rc = vsnprintf (*dst, ret, fmt, ac);
    va_end (ac);
 
-   ret = rc + 1;
+   {
+       int64_t tmp = rc;
+       ret = tmp + 1;
+   }
 
    if (!(tmp = realloc (*dst, ret))) {
       return 0;
