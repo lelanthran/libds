@@ -1,6 +1,7 @@
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include "ds_stack.h"
-
 #include "ds_array.h"
 
 struct ds_stack_t {
@@ -61,4 +62,10 @@ void *ds_stack_peek (ds_stack_t *st)
    return ds_array_get (st->array, nitems - 1);
 }
 
+
+size_t ds_stack_count (ds_stack_t *st)
+{
+   return ds_array_length (st->array);
+
+}
 

@@ -1,4 +1,3 @@
-#include <stdbool.h>
 
 #ifndef H_DS_STACK
 #define H_DS_STACK
@@ -16,7 +15,7 @@ extern "C" {
    void *ds_stack_pop (ds_stack_t *ds);
    void *ds_stack_peek (ds_stack_t *ds);
 
-
+   size_t ds_stack_count (ds_stack_t *st);
 
 #ifdef __cplusplus
 };
