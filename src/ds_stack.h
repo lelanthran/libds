@@ -1,3 +1,10 @@
+/* ********************************************************
+ * Copyright ©2019 Lelanthran Manickum, All rights reserved
+ * This project  is licensed under the MIT License. See the
+ * file LICENSE for more information.
+ */
+
+
 #ifndef H_DS_STACK
 #define H_DS_STACK
 

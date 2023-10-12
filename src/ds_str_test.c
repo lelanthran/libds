@@ -1,3 +1,10 @@
+/* ********************************************************
+ * Copyright ©2019 Lelanthran Manickum, All rights reserved
+ * This project  is licensed under the MIT License. See the
+ * file LICENSE for more information.
+ */
+
+
 #define _POSIX_C_SOURCE 199309L
 
 #include <stdio.h>
