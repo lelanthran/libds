@@ -42,6 +42,8 @@ static void print_stats (ds_hmap_t *hm, const char *msg)
 static void print_kv (const void *key, size_t keylen, void *data, size_t datalen,
                       void *extra_param)
 {
+   (void)keylen;
+   (void)datalen;
    FILE *outf = extra_param;
    const char *name = key;
    const char *value = data;
@@ -232,6 +234,7 @@ errorexit:
    return !error;
 }
 
+#if 0
 static bool large_test (void)
 {
    bool error = true;
@@ -280,6 +283,7 @@ errorexit:
 
    return !error;
 }
+#endif
 
 int main (void)
 {

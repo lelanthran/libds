@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-typedef uint64_t (ds_set_hashfunc_t) (const void *);
+typedef int (ds_set_cmp_t) (const void *, const void *);
 
 typedef struct ds_set_t ds_set_t;
 
@@ -14,8 +14,14 @@ typedef struct ds_set_t ds_set_t;
 extern "C" {
 #endif
 
-   ds_set_t *ds_set_new (ds_set_hashfunc_t *hashfunc, size_t nbuckets);
+   ds_set_t *ds_set_new (ds_set_cmp_t *cmpfunc, size_t nbuckets);
    void ds_set_del (ds_set_t *set);
+
+   const void *ds_set_add (ds_set_t *set, const void *object, size_t object_length);
+   void ds_set_remove (ds_set_t *set, const void *object, size_t object_length);
+   bool ds_set_exists (ds_set_t *set, const void *object, size_t object_length);
+
+   void **ds_set_entries (ds_set_t *set);
 
 
 #ifdef __cplusplus
