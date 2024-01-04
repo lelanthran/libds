@@ -1,0 +1,8 @@
+*.d
+*.swp
+*.vim
+.vscode
+debug/*
+include/*
+.settings
+.project
