@@ -38,8 +38,8 @@ extern "C" {
    // '*dst' is allocated by this function and must be freed by the caller.
    // On success the length of '*dst' is returned, on failure zero is
    // returned.
-   size_t ds_str_printf (char **dst, const char *fmt, ...);
-   size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap);
+   int ds_str_printf (char **dst, const char *fmt, ...);
+   int ds_str_vprintf (char **dst, const char *fmt, va_list ap);
 
    // Trim the leading, the trailing or both the leading and the trailing
    // whitespace from the specified string. The operations are performed

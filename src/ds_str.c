@@ -152,7 +152,7 @@ char *ds_str_append (char **dst, const char *s1, ...)
 
 /* ******************************************************************** */
 
-size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap)
+int ds_str_vprintf (char **dst, const char *fmt, va_list ap)
 {
    size_t ret = 0;
    size_t tmprc = 0;
@@ -186,7 +186,7 @@ size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap)
    return ret;
 }
 
-size_t ds_str_printf (char **dst, const char *fmt, ...)
+int ds_str_printf (char **dst, const char *fmt, ...)
 {
    va_list ap;
 
