@@ -2,6 +2,8 @@
 #ifndef H_DS_SET
 #define H_DS_SET
 
+#include <stdbool.h>
+
 typedef struct ds_set_t ds_set_t;
 
 #ifdef __cplusplus
