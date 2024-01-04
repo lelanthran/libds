@@ -4,6 +4,12 @@
 
 #include "ds_set.h"
 
+static uint64_t hashfunc (const void *item)
+{
+   const char *s = item;
+   return 0;
+}
+
 int main (void)
 {
    static const char *values[] = {
@@ -22,7 +28,7 @@ int main (void)
 
    int ret = EXIT_FAILURE;
 
-   ds_set_t *set = ds_set_new ();
+   ds_set_t *set = ds_set_new (hashfunc, 3);
    if (!set) {
       fprintf (stderr, "Failed to create new set\n");
       goto cleanup;
