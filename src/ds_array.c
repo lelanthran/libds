@@ -83,6 +83,16 @@ void *ds_array_get (const ds_array_t *ll, size_t i)
    return ll->array[i];
 }
 
+void ds_array_fptr (ds_array_t *ll, void (*fptr) (void *))
+{
+   if (!ll || !fptr)
+      return;
+
+   for (size_t i=0; ll->array[i]; i++) {
+      fptr (ll->array[i]);
+   }
+}
+
 void ds_array_iterate (const ds_array_t *ll,
                        void (*fptr) (void *, void *), void *param)
 {
@@ -92,6 +102,63 @@ void ds_array_iterate (const ds_array_t *ll,
    for (size_t i=0; ll->array[i]; i++) {
       fptr (ll->array[i], param);
    }
+}
+
+ds_array_t *ds_array_filter (const ds_array_t *ll,
+                             bool (*predicate) (const void *, void *), void *param)
+{
+   bool error = true;
+   if (!ll || !predicate)
+      return NULL;
+
+   ds_array_t *ret = ds_array_new ();
+   if (!ret) {
+      goto errorexit;
+   }
+
+   for (size_t i=0; ll->array[i]; i++) {
+      if (predicate (ll->array[i], param)) {
+         if (!(ds_array_ins_tail (ret, ll->array[i]))) {
+            goto errorexit;
+         }
+      }
+   }
+
+   error = false;
+errorexit:
+   if (error) {
+      ds_array_del (ret);
+      ret = NULL;
+   }
+   return ret;
+}
+
+ds_array_t *ds_array_map (const ds_array_t *ll,
+                          void *(*fptr) (const void *, void *), void *param)
+{
+   // Memory leak here if we ever encounter an error in this function
+   bool error = true;
+   ds_array_t *ret = ds_array_new ();
+   if (!ret) {
+      return NULL;
+   }
+
+   for (size_t i=0; ll->array[i]; i++) {
+      void *result = fptr (ll->array[i], param);
+      if (result) {
+         if (!(ds_array_ins_tail (ret, result))) {
+            goto errorexit;
+         }
+      }
+   }
+
+   error = false;
+errorexit:
+   if (error) {
+      ds_array_del (ret);
+      ret = NULL;
+   }
+   return ret;
 }
 
 static bool ds_array_grow (ds_array_t *ll, size_t nelems)
