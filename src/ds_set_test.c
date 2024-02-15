@@ -58,7 +58,7 @@ int main (void)
 
    // Entries that weren't removed must be found
    for (size_t i=0; i<sizeof exists/sizeof exists[0]; i++) {
-      bool found = ds_set_exists (set, exists[i], strlen (exists[i]));
+      char *found = ds_set_find (set, exists[i], strlen (exists[i]));
       if (!found) {
          LOG ("%zu: Failed to find [%s] in set\n", i, exists[i]);
          goto cleanup;
@@ -67,7 +67,7 @@ int main (void)
 
    // Entries that were removed must not be found
    for (size_t i=0; i<sizeof notexists/sizeof notexists[0]; i++) {
-      bool found = ds_set_exists (set, notexists[i], strlen (notexists[i]));
+      char *found = ds_set_find (set, notexists[i], strlen (notexists[i]));
       if (found) {
          LOG ("%zu: Found [%s] in set\n", i, notexists[i]);
          goto cleanup;
@@ -86,7 +86,7 @@ int main (void)
    }
 
    for (size_t i=0; entries[i]; i++) {
-      bool found = ds_set_exists (set, entries[i], strlen (entries[i]));
+      char *found = ds_set_find (set, entries[i], strlen (entries[i]));
       if (!found) {
          LOG ("%zu: Failed to find [%s] in set\n", i, entries[i]);
          goto cleanup;

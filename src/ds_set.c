@@ -39,15 +39,15 @@ static void bucket_clear (struct bucket_t *bucket)
    memset (bucket, 0, sizeof *bucket);
 }
 
-static const void *bucket_find (const struct bucket_t *bucket,  ds_set_cmp_t *fptr,
-                                const void *o)
+static void *bucket_find (const struct bucket_t *bucket,  ds_set_cmp_t *fptr,
+                          const void *o)
 {
    if (!bucket)
       return NULL;
 
    for (size_t i=0; i<bucket->len; i++) {
       if ((fptr (o, bucket->array[i])) == 0)
-         return bucket->array[i];
+         return (void *)bucket->array[i];
    }
    return NULL;
 }
@@ -138,14 +138,11 @@ void ds_set_remove (ds_set_t *set, const void *object, size_t object_length)
    bucket_remove (&set->buckets[index], set->cmpfptr, object);
 }
 
-bool ds_set_exists (ds_set_t *set, const void *object, size_t object_length)
+void *ds_set_find (ds_set_t *set, const void *object, size_t object_length)
 {
    size_t hash = hash_calc (object, object_length);
    size_t index = hash % set->nbuckets;
-   if ((bucket_find (&set->buckets[index], set->cmpfptr, object))) {
-      return true;
-   }
-   return false;
+   return bucket_find (&set->buckets[index], set->cmpfptr, object);
 }
 
 

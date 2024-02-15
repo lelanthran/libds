@@ -19,7 +19,7 @@ extern "C" {
 
    const void *ds_set_add (ds_set_t *set, const void *object, size_t object_length);
    void ds_set_remove (ds_set_t *set, const void *object, size_t object_length);
-   bool ds_set_exists (ds_set_t *set, const void *object, size_t object_length);
+   void *ds_set_find (ds_set_t *set, const void *object, size_t object_length);
 
    void **ds_set_entries (ds_set_t *set);
 
