@@ -127,6 +127,7 @@ const void *ds_set_add (ds_set_t *set, const void *object, size_t object_length)
          return NULL;
       }
    }
+
    return object;
 }
 

@@ -5,6 +5,11 @@
 
 #include "ds_set.h"
 
+#define LOG(...)     do {\
+   fprintf (stderr, "%s:%i: in `%s`:", __FILE__, __LINE__, __func__);\
+   fprintf (stderr, __VA_ARGS__);\
+} while (0);
+
 static int cmpfunc (const void *lhs, const void *rhs)
 {
    const char *s1 = lhs,
@@ -28,18 +33,20 @@ int main (void)
       "one", "four", "seven",
    };
 
+   const char **entries = NULL;
+
    int ret = EXIT_FAILURE;
 
    ds_set_t *set = ds_set_new (cmpfunc, 3);
    if (!set) {
-      fprintf (stderr, "Failed to create new set\n");
+      LOG ("Failed to create new set\n");
       goto cleanup;
    }
 
    // Add everything
    for (size_t i=0; i<sizeof values/sizeof *values; i++) {
       if (!(ds_set_add (set, values[i], strlen (values[i])))) {
-         fprintf (stderr, "%zu: Failed to add [%s] to set\n", i, values[i]);
+         LOG ("%zu: Failed to add [%s] to set\n", i, values[i]);
          goto cleanup;
       }
    }
@@ -53,7 +60,7 @@ int main (void)
    for (size_t i=0; i<sizeof exists/sizeof exists[0]; i++) {
       bool found = ds_set_exists (set, exists[i], strlen (exists[i]));
       if (!found) {
-         fprintf (stderr, "%zu: Failed to find [%s] in set\n", i, exists[i]);
+         LOG ("%zu: Failed to find [%s] in set\n", i, exists[i]);
          goto cleanup;
       }
    }
@@ -62,15 +69,15 @@ int main (void)
    for (size_t i=0; i<sizeof notexists/sizeof notexists[0]; i++) {
       bool found = ds_set_exists (set, notexists[i], strlen (notexists[i]));
       if (found) {
-         fprintf (stderr, "%zu: Found [%s] in set\n", i, notexists[i]);
+         LOG ("%zu: Found [%s] in set\n", i, notexists[i]);
          goto cleanup;
       }
    }
 
    // Iterate on all items
-   const char **entries  = (const char **)ds_set_entries (set);
+   entries  = (const char **)ds_set_entries (set);
    if (!entries) {
-      fprintf (stderr, "Failed to get pointers to all stored entries\n");
+      LOG ("Failed to get pointers to all stored entries\n");
       goto cleanup;
    }
    printf ("All entries follow:\n");
@@ -81,15 +88,17 @@ int main (void)
    for (size_t i=0; entries[i]; i++) {
       bool found = ds_set_exists (set, entries[i], strlen (entries[i]));
       if (!found) {
-         fprintf (stderr, "%zu: Failed to find [%s] in set\n", i, entries[i]);
+         LOG ("%zu: Failed to find [%s] in set\n", i, entries[i]);
          goto cleanup;
       }
    }
    free (entries);
+   entries = NULL;
 
    ret = EXIT_SUCCESS;
 
 cleanup:
+   free (entries);
    ds_set_del (set);
    printf ("Returning %i\n", ret);
    return ret;
