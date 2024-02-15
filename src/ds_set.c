@@ -65,17 +65,19 @@ static const void *bucket_add (struct bucket_t *bucket, const void *object)
    return object;
 }
 
-static void bucket_remove (struct bucket_t *bucket,  ds_set_cmp_t *fptr,
+static const void *bucket_remove (struct bucket_t *bucket,  ds_set_cmp_t *fptr,
                            const void *o)
 {
    for (size_t i=0; i<bucket->len; i++) {
       if ((fptr (o, bucket->array[i])) == 0) {
+         const void *ret = bucket->array[i];
          memmove (&bucket->array[i], &bucket->array[i+1],
                sizeof bucket->array[i] * (bucket->len - 1 - i));
          bucket->len--;
-         return;
+         return ret;
       }
    }
+   return NULL;
 }
 
 /* ********************************************************************** */
@@ -115,27 +117,28 @@ void ds_set_del (ds_set_t *set)
    free (set);
 }
 
-const void *ds_set_add (ds_set_t *set, const void *object, size_t object_length)
+int ds_set_add (ds_set_t *set, const void *object, size_t object_length)
 {
    if (!set)
-      return NULL;
+      return -1;
 
    size_t hash = hash_calc (object, object_length);
    size_t index = hash % set->nbuckets;
    if (!(bucket_find (&set->buckets[index], set->cmpfptr, object))) {
       if (!(bucket_add (&set->buckets[index], object))) {
-         return NULL;
+         return -1;
       }
+      return 1;
    }
 
-   return object;
+   return 0;
 }
 
-void ds_set_remove (ds_set_t *set, const void *object, size_t object_length)
+const void *ds_set_remove (ds_set_t *set, const void *object, size_t object_length)
 {
    size_t hash = hash_calc (object, object_length);
    size_t index = hash % set->nbuckets;
-   bucket_remove (&set->buckets[index], set->cmpfptr, object);
+   return bucket_remove (&set->buckets[index], set->cmpfptr, object);
 }
 
 void *ds_set_find (ds_set_t *set, const void *object, size_t object_length)
@@ -169,4 +172,67 @@ void **ds_set_entries (ds_set_t *set)
 
    return entries;
 }
+
+void ds_set_fptr (ds_set_t *set, void (*fptr) (void *))
+{
+   if (!set || !fptr)
+      return;
+
+   void **entries = ds_set_entries (set);
+   if (!entries)
+      return;
+
+   for (size_t i=0; entries[i]; i++) {
+      fptr (entries[i]);
+   }
+   free (entries);
+}
+
+void ds_set_iterate (ds_set_t *set, void (*fptr) (const void *, void *),
+                     void *param)
+{
+   if (!set || !fptr)
+      return;
+
+   void **entries = ds_set_entries (set);
+   if (!entries)
+      return;
+
+   for (size_t i=0; entries[i]; i++) {
+      fptr (entries[i], param);
+   }
+   free (entries);
+}
+
+void **ds_set_map (ds_set_t *set, void *(*fptr) (const void *, void *),
+                   void *param)
+{
+   if (!set || !fptr)
+      return NULL;
+
+   void **ret = NULL;
+   void **entries = ds_set_entries (set);
+   if (!entries) {
+      ret = calloc (1, sizeof *ret);
+      return ret;
+   }
+
+   size_t nentries = 1;
+   for (size_t i=0; entries[i]; i++) {
+      nentries++;
+   }
+
+   if (!(ret = calloc (nentries, sizeof *ret))) {
+      free (entries);
+      return NULL;
+   }
+
+   for (size_t i=0; entries[i]; i++) {
+      ret[i] = fptr (entries[i], param);
+   }
+
+   free (entries);
+   return ret;
+}
+
 

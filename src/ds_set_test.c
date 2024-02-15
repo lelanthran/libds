@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "ds_set.h"
 
@@ -9,6 +10,36 @@
    fprintf (stderr, "%s:%i: in `%s`:", __FILE__, __LINE__, __func__);\
    fprintf (stderr, __VA_ARGS__);\
 } while (0);
+
+static char *lstrdup (const char *src)
+{
+   size_t nbytes = strlen (src) + 1;
+   char *ret = malloc (nbytes);
+   if (!ret) {
+      LOG ("Fatail OOM error copying [%s]\n", src);
+   }
+   return strcpy (ret, src);
+}
+
+static void printstring (const void *obj, void *param)
+{
+   const char *s = obj;
+   FILE *outf = param;
+   fprintf (outf, "[%s:%i %s()] [%s]\n", __FILE__, __LINE__, __func__, s);
+}
+
+static void *upcase (const void *obj, void *param)
+{
+   (void)param;
+   const char *s = obj;
+   char *ret = lstrdup (s);
+   for (size_t i=0; ret && ret[i]; i++) {
+      ret[i] = toupper (ret[i]);
+   }
+   LOG ("Returning [%s]\n", ret);
+   return ret;
+}
+
 
 static int cmpfunc (const void *lhs, const void *rhs)
 {
@@ -45,15 +76,26 @@ int main (void)
 
    // Add everything
    for (size_t i=0; i<sizeof values/sizeof *values; i++) {
-      if (!(ds_set_add (set, values[i], strlen (values[i])))) {
-         LOG ("%zu: Failed to add [%s] to set\n", i, values[i]);
+      char *tmp = lstrdup (values[i]);
+      int rc = ds_set_add (set, tmp, strlen (tmp));
+      if (rc < 0) {
+         LOG ("%zu: Failed to add [%s] to set\n", i, tmp);
+         free (tmp);
          goto cleanup;
+      }
+      if (rc == 0 ) {
+         LOG ("%zu: Item [%s] already exists, ignoring\n", i, tmp);
+         free (tmp);
+      }
+      if (rc > 0) {
+         LOG ("%zu: Added [%s]\n", i, tmp);
       }
    }
 
    // Remove some entries
    for (size_t i=0; i<sizeof notexists/sizeof notexists[0]; i++) {
-      ds_set_remove (set, notexists[i], strlen (notexists[i]));
+      char *tmp = ds_set_remove (set, notexists[i], strlen (notexists[i]));
+      free (tmp);
    }
 
    // Entries that weren't removed must be found
@@ -95,10 +137,26 @@ int main (void)
    free (entries);
    entries = NULL;
 
+   // Try some iteration and mapping functions (fptr handles deletes)
+   char **uppers = (char **)ds_set_map (set, upcase, NULL);
+   if (!uppers) {
+      LOG ("Failed to map set elements to uppercase\n");
+      goto cleanup;
+   }
+   for (size_t i=0; uppers[i]; i++) {
+      printf ("upcase[%zu]: [%s]\n", i, uppers[i]);
+      free (uppers[i]);
+   }
+   free (uppers);
+   uppers = NULL;
+
+   ds_set_iterate (set, printstring, stdout);
+
    ret = EXIT_SUCCESS;
 
 cleanup:
    free (entries);
+   ds_set_fptr (set, free);
    ds_set_del (set);
    printf ("Returning %i\n", ret);
    return ret;
