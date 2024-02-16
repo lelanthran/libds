@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-typedef int (ds_set_cmp_t) (const void *, const void *);
+typedef int (ds_set_cmp_t) (const void *, size_t, const void *, size_t);
 
 typedef struct ds_set_t ds_set_t;
 
@@ -37,7 +37,10 @@ extern "C" {
    // Get all the entries as an array of void pointers to the objects. The
    // caller must free the return array only, and not each element in the
    // returned array.
-   void **ds_set_entries (const ds_set_t *set);
+   //
+   // If parameter `length` is specified, it will be populated with an array
+   // of all the lengths of each entry. The caller free (*lengths)
+   void **ds_set_entries (const ds_set_t *set, size_t **lengths);
 
    // Some convenience functions to iterate across all elements stored in the
    // set.

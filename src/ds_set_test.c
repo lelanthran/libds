@@ -41,10 +41,12 @@ static void *upcase (const void *obj, void *param)
 }
 
 
-static int cmpfunc (const void *lhs, const void *rhs)
+static int cmpfunc (const void *lhs, size_t lhs_len, const void *rhs, size_t rhs_len)
 {
    const char *s1 = lhs,
               *s2 = rhs;
+   (void)lhs_len;
+   (void)rhs_len;
    return strcmp (s1, s2);
 }
 
@@ -65,6 +67,7 @@ int main (void)
    };
 
    const char **entries = NULL;
+   size_t *lengths = NULL;
 
    int ret = EXIT_FAILURE;
 
@@ -117,14 +120,14 @@ int main (void)
    }
 
    // Iterate on all items
-   entries  = (const char **)ds_set_entries (set);
+   entries  = (const char **)ds_set_entries (set, &lengths);
    if (!entries) {
       LOG ("Failed to get pointers to all stored entries\n");
       goto cleanup;
    }
    printf ("All entries follow:\n");
    for (size_t i=0; entries[i]; i++) {
-      printf ("%zu: [%s]\n", i, entries[i]);
+      printf ("%zu: [%s] of length [%zu] bytes\n", i, entries[i], lengths[i]);
    }
 
    for (size_t i=0; entries[i]; i++) {
@@ -136,6 +139,8 @@ int main (void)
    }
    free (entries);
    entries = NULL;
+   free (lengths);
+   lengths = NULL;
 
    // Try some iteration and mapping functions (fptr handles deletes)
    char **uppers = (char **)ds_set_map (set, upcase, NULL);

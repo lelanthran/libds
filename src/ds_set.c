@@ -25,6 +25,7 @@ static size_t hash_calc (const void *o, size_t olen)
 
 struct bucket_t {
    const void **array;
+   size_t *olengths;
    size_t len;
 };
 
@@ -36,43 +37,55 @@ static void bucket_init (struct bucket_t *bucket)
 static void bucket_clear (struct bucket_t *bucket)
 {
    free (bucket->array);
+   free (bucket->olengths);
    memset (bucket, 0, sizeof *bucket);
 }
 
 static void *bucket_find (const struct bucket_t *bucket,  ds_set_cmp_t *fptr,
-                          const void *o)
+                          const void *o, size_t olen)
 {
    if (!bucket)
       return NULL;
 
    for (size_t i=0; i<bucket->len; i++) {
-      if ((fptr (o, bucket->array[i])) == 0)
+      if ((fptr (o, olen, bucket->array[i], bucket->olengths[i])) == 0)
          return (void *)bucket->array[i];
    }
    return NULL;
 }
 
-static const void *bucket_add (struct bucket_t *bucket, const void *object)
+static const void *bucket_add (struct bucket_t *bucket,
+                               const void *object, size_t object_length)
 {
-   const void **tmp = realloc (bucket->array, sizeof *bucket * (bucket->len + 1));
-   if (!tmp)
+   size_t alen = bucket->len;
+   const void **t1 = realloc (bucket->array, sizeof (*bucket->array) * (alen + 1));
+   if (!t1)
       return NULL;
+   bucket->array = t1;
 
-   bucket->array = tmp;
+   size_t *t2 = realloc (bucket->olengths, sizeof (*bucket->olengths) * (alen + 1));
+   if (!t2) {
+      return NULL;
+   }
+   bucket->olengths = t2;
+
    bucket->array[bucket->len] = object;
+   bucket->olengths[bucket->len] = object_length;
    bucket->len++;
 
    return object;
 }
 
 static const void *bucket_remove (struct bucket_t *bucket,  ds_set_cmp_t *fptr,
-                           const void *o)
+                                  const void *o, size_t olen)
 {
    for (size_t i=0; i<bucket->len; i++) {
-      if ((fptr (o, bucket->array[i])) == 0) {
+      if ((fptr (o, olen, bucket->array[i], bucket->olengths[i])) == 0) {
          const void *ret = bucket->array[i];
          memmove (&bucket->array[i], &bucket->array[i+1],
                sizeof bucket->array[i] * (bucket->len - 1 - i));
+         memmove (&bucket->olengths[i], &bucket->olengths[i+1],
+               sizeof bucket->olengths[i] * (bucket->len - 1 - i));
          bucket->len--;
          return ret;
       }
@@ -124,8 +137,8 @@ int ds_set_add (ds_set_t *set, const void *object, size_t object_length)
 
    size_t hash = hash_calc (object, object_length);
    size_t index = hash % set->nbuckets;
-   if (!(bucket_find (&set->buckets[index], set->cmpfptr, object))) {
-      if (!(bucket_add (&set->buckets[index], object))) {
+   if (!(bucket_find (&set->buckets[index], set->cmpfptr, object, object_length))) {
+      if (!(bucket_add (&set->buckets[index], object, object_length))) {
          return -1;
       }
       return 1;
@@ -138,22 +151,27 @@ const void *ds_set_remove (ds_set_t *set, const void *object, size_t object_leng
 {
    size_t hash = hash_calc (object, object_length);
    size_t index = hash % set->nbuckets;
-   return bucket_remove (&set->buckets[index], set->cmpfptr, object);
+   return bucket_remove (&set->buckets[index], set->cmpfptr, object, object_length);
 }
 
 void *ds_set_find (ds_set_t *set, const void *object, size_t object_length)
 {
    size_t hash = hash_calc (object, object_length);
    size_t index = hash % set->nbuckets;
-   return bucket_find (&set->buckets[index], set->cmpfptr, object);
+   return bucket_find (&set->buckets[index], set->cmpfptr, object, object_length);
 }
 
 
-void **ds_set_entries (const ds_set_t *set)
+void **ds_set_entries (const ds_set_t *set, size_t **lengths)
 {
    size_t nitems = 0;
    for (size_t i=0; i<set->nbuckets; i++) {
       nitems += set->buckets[i].len;
+   }
+   if (lengths) {
+      if (!(*lengths = calloc (nitems + 1, sizeof (size_t)))) {
+         return NULL;
+      }
    }
    if (nitems == 0) {
       return calloc (1, sizeof (void *));
@@ -166,6 +184,9 @@ void **ds_set_entries (const ds_set_t *set)
    size_t index = 0;
    for (size_t i=0; i<set->nbuckets; i++) {
       for (size_t j=0; j<set->buckets[i].len; j++) {
+         if (lengths) {
+            (*lengths)[index] = set->buckets[i].olengths[j];
+         }
          entries[index++] = (void *)set->buckets[i].array[j];
       }
    }
@@ -178,7 +199,7 @@ void ds_set_fptr (ds_set_t *set, void (*fptr) (void *))
    if (!set || !fptr)
       return;
 
-   void **entries = ds_set_entries (set);
+   void **entries = ds_set_entries (set, NULL);
    if (!entries)
       return;
 
@@ -194,7 +215,7 @@ void ds_set_iterate (ds_set_t *set, void (*fptr) (const void *, void *),
    if (!set || !fptr)
       return;
 
-   void **entries = ds_set_entries (set);
+   void **entries = ds_set_entries (set, NULL);
    if (!entries)
       return;
 
@@ -211,7 +232,7 @@ void **ds_set_map (ds_set_t *set, void *(*fptr) (const void *, void *),
       return NULL;
 
    void **ret = NULL;
-   void **entries = ds_set_entries (set);
+   void **entries = ds_set_entries (set, NULL);
    if (!entries) {
       ret = calloc (1, sizeof *ret);
       return ret;
@@ -244,7 +265,7 @@ ds_set_t *ds_set_filter (const ds_set_t *set,
       return NULL;
 
    ds_set_t *ret = ds_set_new (set->cmpfptr, set->nbuckets);
-   void **entries = ds_set_entries (set);
+   void **entries = ds_set_entries (set, NULL);
    if (!entries) {
       ret = calloc (1, sizeof *ret);
       return ret;
