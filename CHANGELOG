@@ -1,8 +1,8 @@
 # v1.0.7 - ???
 Features
-1. Added stack_t datatype.
-2. Support for building on visual studio (2022).
-3. Added a set_t datatype.
+1. Adds stack_t datatype.
+2. Support for building on visual studio (2022) (does not include set_t)
+3. Adds a set_t datatype, with iteration functions.
 4. Adds array/filter and array/map and array/fptr functions.
 
 

@@ -149,7 +149,7 @@ void *ds_set_find (ds_set_t *set, const void *object, size_t object_length)
 }
 
 
-void **ds_set_entries (ds_set_t *set)
+void **ds_set_entries (const ds_set_t *set)
 {
    size_t nitems = 0;
    for (size_t i=0; i<set->nbuckets; i++) {
@@ -235,4 +235,42 @@ void **ds_set_map (ds_set_t *set, void *(*fptr) (const void *, void *),
    return ret;
 }
 
+
+ds_set_t *ds_set_filter (const ds_set_t *set,
+                         bool (*predicate) (const void *, void *),
+                         void *param)
+{
+   if (!set || !predicate)
+      return NULL;
+
+   ds_set_t *ret = ds_set_new (set->cmpfptr, set->nbuckets);
+   void **entries = ds_set_entries (set);
+   if (!entries) {
+      ret = calloc (1, sizeof *ret);
+      return ret;
+   }
+
+   size_t nentries = 1;
+   for (size_t i=0; entries[i]; i++) {
+      nentries++;
+   }
+
+   if (!(ret = calloc (nentries, sizeof *ret))) {
+      free (entries);
+      return NULL;
+   }
+
+   for (size_t i=0; entries[i]; i++) {
+      if ((predicate (entries[i], param))) {
+         if ((ds_set_add (ret, entries[i], 0)) < 0) { // TODO: This looks like a bug
+            free (entries);
+            ds_set_del (ret);
+            return NULL;
+         }
+      }
+   }
+
+   free (entries);
+   return ret;
+}
 

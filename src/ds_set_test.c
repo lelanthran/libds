@@ -94,8 +94,8 @@ int main (void)
 
    // Remove some entries
    for (size_t i=0; i<sizeof notexists/sizeof notexists[0]; i++) {
-      char *tmp = ds_set_remove (set, notexists[i], strlen (notexists[i]));
-      free (tmp);
+      const char *tmp = ds_set_remove (set, notexists[i], strlen (notexists[i]));
+      free ((char *)tmp);
    }
 
    // Entries that weren't removed must be found

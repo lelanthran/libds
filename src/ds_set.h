@@ -37,7 +37,7 @@ extern "C" {
    // Get all the entries as an array of void pointers to the objects. The
    // caller must free the return array only, and not each element in the
    // returned array.
-   void **ds_set_entries (ds_set_t *set);
+   void **ds_set_entries (const ds_set_t *set);
 
    // Some convenience functions to iterate across all elements stored in the
    // set.
@@ -46,6 +46,10 @@ extern "C" {
                         void *param);
    void **ds_set_map (ds_set_t *set, void *(*fptr) (const void *, void *),
                       void *param);
+   ds_set_t *ds_set_filter (const ds_set_t *set,
+                            bool (*predicate) (const void *, void *),
+                            void *param);
+
 
 
 
