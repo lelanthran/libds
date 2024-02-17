@@ -43,14 +43,16 @@ extern "C" {
    void **ds_set_entries (const ds_set_t *set, size_t **lengths);
 
    // Some convenience functions to iterate across all elements stored in the
-   // set.
+   // set. The size of the element is passed in the size_t parameter to the
+   // callback function. the `ds_set_fptr` function does not provide the size
+   // of the element.
    void ds_set_fptr (ds_set_t *set, void (*fptr) (void *));
-   void ds_set_iterate (ds_set_t *set, void (*fptr) (const void *, void *),
+   void ds_set_iterate (ds_set_t *set, void (*fptr) (const void *, size_t, void *),
                         void *param);
-   void **ds_set_map (ds_set_t *set, void *(*fptr) (const void *, void *),
+   void **ds_set_map (ds_set_t *set, void *(*fptr) (const void *, size_t, void *),
                       void *param);
    ds_set_t *ds_set_filter (const ds_set_t *set,
-                            bool (*predicate) (const void *, void *),
+                            bool (*predicate) (const void *, size_t, void *),
                             void *param);
 
 

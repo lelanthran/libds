@@ -103,6 +103,10 @@ struct ds_set_t {
 
 ds_set_t *ds_set_new (ds_set_cmp_t *cmpfunc, size_t nbuckets)
 {
+   if (nbuckets < 4) {
+      nbuckets = 4; // minimum of three buckets
+   }
+
    ds_set_t *ret = calloc (1, sizeof *ret);
    if (!ret || !(ret->buckets = calloc (nbuckets, sizeof *ret->buckets))) {
       ds_set_del (ret);
@@ -209,30 +213,35 @@ void ds_set_fptr (ds_set_t *set, void (*fptr) (void *))
    free (entries);
 }
 
-void ds_set_iterate (ds_set_t *set, void (*fptr) (const void *, void *),
+void ds_set_iterate (ds_set_t *set, void (*fptr) (const void *, size_t, void *),
                      void *param)
 {
    if (!set || !fptr)
       return;
 
-   void **entries = ds_set_entries (set, NULL);
-   if (!entries)
+   size_t *lengths = NULL;
+   void **entries = ds_set_entries (set, &lengths);
+   if (!entries) {
+      free (lengths);
       return;
+   }
 
    for (size_t i=0; entries[i]; i++) {
-      fptr (entries[i], param);
+      fptr (entries[i], lengths[i], param);
    }
+   free (lengths);
    free (entries);
 }
 
-void **ds_set_map (ds_set_t *set, void *(*fptr) (const void *, void *),
+void **ds_set_map (ds_set_t *set, void *(*fptr) (const void *, size_t, void *),
                    void *param)
 {
    if (!set || !fptr)
       return NULL;
 
    void **ret = NULL;
-   void **entries = ds_set_entries (set, NULL);
+   size_t *lengths = NULL;
+   void **entries = ds_set_entries (set, &lengths);
    if (!entries) {
       ret = calloc (1, sizeof *ret);
       return ret;
@@ -244,30 +253,36 @@ void **ds_set_map (ds_set_t *set, void *(*fptr) (const void *, void *),
    }
 
    if (!(ret = calloc (nentries, sizeof *ret))) {
+      free (lengths);
       free (entries);
       return NULL;
    }
 
    for (size_t i=0; entries[i]; i++) {
-      ret[i] = fptr (entries[i], param);
+      ret[i] = fptr (entries[i], lengths[i], param);
    }
 
+   free (lengths);
    free (entries);
    return ret;
 }
 
 
 ds_set_t *ds_set_filter (const ds_set_t *set,
-                         bool (*predicate) (const void *, void *),
+                         bool (*predicate) (const void *, size_t, void *),
                          void *param)
 {
    if (!set || !predicate)
       return NULL;
 
    ds_set_t *ret = ds_set_new (set->cmpfptr, set->nbuckets);
-   void **entries = ds_set_entries (set, NULL);
+   if (!ret) {
+      return NULL;
+   }
+
+   size_t *lengths = NULL;
+   void **entries = ds_set_entries (set, &lengths);
    if (!entries) {
-      ret = calloc (1, sizeof *ret);
       return ret;
    }
 
@@ -276,14 +291,10 @@ ds_set_t *ds_set_filter (const ds_set_t *set,
       nentries++;
    }
 
-   if (!(ret = calloc (nentries, sizeof *ret))) {
-      free (entries);
-      return NULL;
-   }
-
    for (size_t i=0; entries[i]; i++) {
-      if ((predicate (entries[i], param))) {
-         if ((ds_set_add (ret, entries[i], 0)) < 0) { // TODO: This looks like a bug
+      if ((predicate (entries[i], lengths[i], param))) {
+         if ((ds_set_add (ret, entries[i], lengths[i])) < 0) {
+            free (lengths);
             free (entries);
             ds_set_del (ret);
             return NULL;
@@ -291,6 +302,7 @@ ds_set_t *ds_set_filter (const ds_set_t *set,
       }
    }
 
+   free (lengths);
    free (entries);
    return ret;
 }

@@ -1,4 +1,4 @@
-# v1.0.7 - ???
+# v1.1.0 - ???
 Features
 1. Adds stack_t datatype.
 2. Support for building on visual studio (2022) (does not include set_t)

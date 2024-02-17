@@ -21,14 +21,15 @@ static char *lstrdup (const char *src)
    return strcpy (ret, src);
 }
 
-static void printstring (const void *obj, void *param)
+static void printstring (const void *obj, size_t len, void *param)
 {
    const char *s = obj;
    FILE *outf = param;
-   fprintf (outf, "[%s:%i %s()] [%s]\n", __FILE__, __LINE__, __func__, s);
+   fprintf (outf, "[%s:%i %s()] [%s] %zu bytes\n",
+         __FILE__, __LINE__, __func__, s, len);
 }
 
-static void *upcase (const void *obj, void *param)
+static void *upcase (const void *obj, size_t len, void *param)
 {
    (void)param;
    const char *s = obj;
@@ -36,10 +37,21 @@ static void *upcase (const void *obj, void *param)
    for (size_t i=0; ret && ret[i]; i++) {
       ret[i] = toupper (ret[i]);
    }
-   LOG ("Returning [%s]\n", ret);
+   LOG ("Returning [%s] %zu bytes\n", ret, len);
    return ret;
 }
 
+static bool predicate (const void *obj, size_t len, void *param)
+{
+   static const char *pattern = "ve";
+   FILE *outf = param;
+   const char *s = obj;
+   bool ret = ((strstr (s, pattern))) ? true : false;
+   (void)len;
+   fprintf (outf, "Checking for [%s] in [%s]: %s\n",
+            pattern, s, ret ? "true" : "false");
+   return ret;
+}
 
 static int cmpfunc (const void *lhs, size_t lhs_len, const void *rhs, size_t rhs_len)
 {
@@ -71,6 +83,8 @@ int main (void)
 
    int ret = EXIT_FAILURE;
 
+   ds_set_t *filtered = NULL;
+
    ds_set_t *set = ds_set_new (cmpfunc, 3);
    if (!set) {
       LOG ("Failed to create new set\n");
@@ -95,6 +109,13 @@ int main (void)
       }
    }
 
+   if (!(filtered = ds_set_filter (set, predicate, stdout))) {
+      LOG ("Filtering failure\n");
+      goto cleanup;
+   }
+
+   LOG ("Filtered results\n");
+   ds_set_iterate (filtered, printstring, stdout);
    // Remove some entries
    for (size_t i=0; i<sizeof notexists/sizeof notexists[0]; i++) {
       const char *tmp = ds_set_remove (set, notexists[i], strlen (notexists[i]));
@@ -163,6 +184,7 @@ cleanup:
    free (entries);
    ds_set_fptr (set, free);
    ds_set_del (set);
+   ds_set_del (filtered);
    printf ("Returning %i\n", ret);
    return ret;
 }
