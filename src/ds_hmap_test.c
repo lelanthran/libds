@@ -216,6 +216,18 @@ static bool small_test (void)
    free (keys);      keys = NULL;
    free (keylens);   keylens = NULL;
 
+   printf ("******************* Testing _fptr ******************** \n");
+   for (size_t i=0; i<ntests; i++) {
+      if (!(ds_hmap_set_str_str (hm, tests[i].key, ds_str_dup (tests[i].data)))) {
+         fprintf (stderr, "[%zu] Failed to set [%s:%s]\n", i,
+                                                           tests[i].key,
+                                                           tests[i].data);
+         goto errorexit;
+      }
+   }
+   ds_hmap_fptr (hm, free);
+
+   printf ("****************** _fptr Complete ******************** \n");
    error = false;
 
 errorexit:

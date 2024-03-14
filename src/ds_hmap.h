@@ -90,6 +90,10 @@ extern "C" {
                                                       void *extra_param),
                                         void *extra_param);
 
+   // Iterate across the hashmap in an unspecified order and call fptr() for each
+   // value stored.
+   void ds_hmap_fptr (ds_hmap_t *hm, void (*fptr) (void *value));
+
    // Removes an item from the hashmap. The data stored in the value field
    // still remains the responsibility of the caller.
    void ds_hmap_remove (ds_hmap_t *hm, const void *key, size_t keylen);

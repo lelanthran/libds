@@ -362,6 +362,18 @@ void ds_hmap_iterate (ds_hmap_t *hm, void (*fptr) (const void *key, size_t keyle
    }
 }
 
+void ds_hmap_fptr (ds_hmap_t *hm, void (*fptr) (void *value))
+{
+   if (!hm || !fptr)
+      return;
+
+   for (size_t i=0; i<hm->nbuckets; i++) {
+      for (size_t j=0; j<hm->buckets[i].nelems; j++) {
+         fptr (hm->buckets[i].elems[j].data);
+      }
+   }
+}
+
 void ds_hmap_remove (ds_hmap_t *hm, const void *key, size_t keylen)
 {
    if (!hm)
