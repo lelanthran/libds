@@ -88,7 +88,7 @@ void ds_array_fptr (ds_array_t *ll, void (*fptr) (void *))
    if (!ll || !fptr)
       return;
 
-   for (size_t i=0; ll->array[i]; i++) {
+   for (size_t i=0; i < ll->nitems; i++) {
       fptr (ll->array[i]);
    }
 }
@@ -99,7 +99,7 @@ void ds_array_iterate (const ds_array_t *ll,
    if (!ll || !fptr)
       return;
 
-   for (size_t i=0; ll->array[i]; i++) {
+   for (size_t i=0; i < ll->nitems; i++) {
       fptr (ll->array[i], param);
    }
 }
@@ -116,7 +116,7 @@ ds_array_t *ds_array_filter (const ds_array_t *ll,
       goto errorexit;
    }
 
-   for (size_t i=0; ll->array[i]; i++) {
+   for (size_t i=0; i < ll->nitems; i++) {
       if (predicate (ll->array[i], param)) {
          if (!(ds_array_ins_tail (ret, ll->array[i]))) {
             goto errorexit;
@@ -143,7 +143,7 @@ ds_array_t *ds_array_map (const ds_array_t *ll,
       return NULL;
    }
 
-   for (size_t i=0; ll->array[i]; i++) {
+   for (size_t i=0; i < ll->nitems; i++) {
       void *result = fptr (ll->array[i], param);
       if (result) {
          if (!(ds_array_ins_tail (ret, result))) {
@@ -251,5 +251,6 @@ void *ds_array_rm (ds_array_t *ll, size_t index)
    memmove (&ll->array[index], &ll->array[index + 1],
             (sizeof (void *)) * (ll->nitems - index));
 
+   ll->nitems--;
    return ret;
 }

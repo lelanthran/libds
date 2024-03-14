@@ -4,6 +4,10 @@ Features
 2. Support for building on visual studio (2022) (does not include set_t)
 3. Adds a set_t datatype, with iteration functions.
 4. Adds array/filter and array/map and array/fptr functions.
+5. Adds `ds_cfg_t` datatype (load/read configuration data).
+
+Bugfixes
+1. Iteration on arrays aborted on any element that was NULL.
 
 
 
