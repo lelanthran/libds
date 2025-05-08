@@ -167,23 +167,22 @@ static void ds_hmap_remove_str (ds_hmap_t *hm, const char *key)
 LOCAL_INLINE
 static const char *ds_hmap_set_str_ptr (ds_hmap_t *hm,
                                         const char *key,
-                                        void *data, size_t datalen)
+                                        void *data)
 {
    return ds_hmap_set (hm, key,  strlen (key) + 1,
-                           data, datalen);
+                           data, sizeof data);
 }
 
 // TODO: Test this
 LOCAL_INLINE
 static bool ds_hmap_get_str_ptr (ds_hmap_t *hm,
                                  const char *key,
-                                 void **data, size_t *datalen)
+                                 void **data)
 {
-   void *tmp = data;
-   return ds_hmap_get (hm, key,  strlen (key) + 1,
-                           tmp,  datalen);
+   size_t datalen = sizeof data;
+   return ds_hmap_get (hm, key, strlen (key) + 1,
+                           data, &datalen);
 }
-
 
 
 #endif
