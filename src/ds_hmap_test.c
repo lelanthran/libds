@@ -40,6 +40,8 @@ static void print_kv (const void *key, size_t keylen, void *data, size_t datalen
    const char *name = key;
    const char *value = data;
 
+   (void)keylen;
+   (void)datalen;
    fprintf (outf, "[name:%s] = [value:%s]\n", name, value);
 }
 
