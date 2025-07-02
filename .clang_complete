@@ -5,6 +5,7 @@
 -D_GNU_SOURCE
 -DBUILD_TIMESTAMP='"201909162104"'
 -std=c99
+-W -Wall
 
 -I/usr/lib/jvm/java-11-openjdk-amd64/include\
 -I/usr/lib/jvm/java-11-openjdk-amd64/include/linux
