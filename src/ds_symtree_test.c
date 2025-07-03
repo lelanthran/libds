@@ -8,7 +8,7 @@ int main (void)
 {
    int ret = EXIT_FAILURE;
    char *sval = NULL;
-   ds_symtree_t *rootnode = ds_symtree_new (NULL, ds_symtree_OBJECT, "unset");
+   ds_symtree_t *rootnode = ds_symtree_new (NULL, ds_symtree_OBJECT, "unset", NULL);
 
    if (!rootnode) {
       printf ("Failed to create rootnode\n");
@@ -39,7 +39,7 @@ int main (void)
          type = ds_symtree_OBJECT;
       }
 
-      if (!(child = ds_symtree_new (rootnode, type, name))) {
+      if (!(child = ds_symtree_new (rootnode, type, name, value))) {
          printf ("Failed to create node %zu\n", i);
          goto cleanup;
       }
@@ -54,7 +54,7 @@ int main (void)
             ds_symtree_t *gchild = NULL;
             snprintf (name, sizeof name, "Grandchild %zu/%zu", i, j);
             snprintf (value, sizeof value, "Grandvalue %zu/%zu", i, j);
-            if (!(gchild = ds_symtree_new (child, ds_symtree_STRING, name))) {
+            if (!(gchild = ds_symtree_new (child, ds_symtree_STRING, name, NULL))) {
                printf ("Failed to create node %s\n", name);
                goto cleanup;
             }

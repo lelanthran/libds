@@ -31,7 +31,8 @@ extern "C" {
 
    ds_symtree_t *ds_symtree_new (ds_symtree_t *parent,
                                  enum ds_symtree_type_t type,
-                                 const char *node_name);
+                                 const char *node_name,
+                                 const char *node_value);
    void ds_symtree_del (ds_symtree_t **node);
 
    bool ds_symtree_name_set (ds_symtree_t *node, const char *newnode);

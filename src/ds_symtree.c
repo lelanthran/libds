@@ -6,14 +6,14 @@
 #include "ds_str.h"
 
 
-typedef void *(value_init_t) (void);
+typedef void *(value_init_t) (const void *src);
 typedef void (value_del_t) (void **src);
 typedef char *(value_2json_t) (const void *src, size_t indent);
 
 
-static void *value_init_STRING (void)
+static void *value_init_STRING (const void *src)
 {
-   return NULL;
+   return src ? ds_str_cat ("\"", src, "\"", NULL) : ds_str_dup ("\"\"");
 }
 
 static void value_del_STRING (void **src)
@@ -32,9 +32,9 @@ static char *value_2json_STRING (const void *src, size_t indent)
 
 
 
-static void *value_init_SYMBOL (void)
+static void *value_init_SYMBOL (const void *src)
 {
-   return NULL;
+   return ds_str_dup (src);;
 }
 
 static void value_del_SYMBOL (void **src)
@@ -49,8 +49,9 @@ static char *value_2json_SYMBOL (const void *src, size_t indent)
 
 
 
-static void *value_init_ARRAY (void)
+static void *value_init_ARRAY (const void *src)
 {
+   (void)src;
    return ds_array_new ();
 }
 
@@ -150,7 +151,8 @@ struct ds_symtree_t {
 
 ds_symtree_t *ds_symtree_new (ds_symtree_t *parent,
                               enum ds_symtree_type_t type,
-                              const char *node_name)
+                              const char *node_name,
+                              const char *node_value)
 {
    bool error = true;
    ds_symtree_t *ret = calloc (1, sizeof *ret);
@@ -195,7 +197,7 @@ ds_symtree_t *ds_symtree_new (ds_symtree_t *parent,
          break;
    }
 
-   ret->value = ret->finit ();
+   ret->value = ret->finit (node_value);
 
    error = false;
 cleanup:
