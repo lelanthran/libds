@@ -33,6 +33,8 @@ extern "C" {
 
    void ds_array_shrink_to_fit (ds_array_t *ll);
 
+   void **ds_array_all (ds_array_t *ll, void ***dst, size_t *dstlen);
+
 #ifdef __cplusplus
 };
 #endif

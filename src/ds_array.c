@@ -179,3 +179,26 @@ void *ds_array_rm (ds_array_t *ll, size_t index)
 
    return ret;
 }
+
+void **ds_array_all (ds_array_t *ll, void ***dst, size_t *dstlen)
+{
+   if (!ll || !ll->nitems) {
+      if (dstlen)
+         *dstlen = 0;
+      return NULL;
+   }
+
+   void **tmp = calloc (1 + ll->nitems, sizeof *tmp);
+   if (!tmp) {
+      if (dstlen)
+         *dstlen = 0;
+      return NULL;
+   }
+   for (size_t i=0; i<ll->nitems; i++) {
+      tmp[i] = ll->array[i];
+   }
+   if (dstlen)
+      *dstlen = ll->nitems;
+   *dst = tmp;
+   return *dst;
+}
