@@ -1,0 +1,28 @@
+{
+   "strings": {
+      "string-1": "Hello from\ncaf\u00e9",
+      "string-2": "Hello\r\"World\" with embedded \\ in the string"
+   },
+   "numbers": {
+      "number-1": 123,
+      "number-2": 123.456,
+      "number-3": 0,
+      "number-4": 12e-34,
+      "number-5": 12e+34,
+      "number-6": 12.34e56,
+      "number-7": -12.34e56
+   },
+   "symbols": {
+      "TRUE":  true,
+      "FALSE": false,
+      "NULL":  null
+   },
+   "arrays": {
+      "simple":      ["a", null, 123.456e78, false],
+      "composite":   [
+         {  "obj-0": "value-0" },
+         {  "obj-1": "value-1" },
+         {  "obj-2": "value-2" }
+      ]
+   }
+}
