@@ -292,7 +292,7 @@ const void *ds_hmap_set (ds_hmap_t *hm, const void *key,  size_t keylen,
       return NULL;
    }
 
-   uint32_t hash = make_hash (key, keylen) % hm->nbuckets;
+   size_t hash = make_hash (key, keylen) % hm->nbuckets;
    entry_t *e = NULL;
 
    if (!(e = bucket_set (&hm->buckets[hash], key, keylen, data, datalen))) {
@@ -320,7 +320,7 @@ bool ds_hmap_get (ds_hmap_t *hm, const void *key,  size_t keylen,
       return NULL;
    }
 
-   uint32_t hash = make_hash (key, keylen) % hm->nbuckets;
+   size_t hash = make_hash (key, keylen) % hm->nbuckets;
    const entry_t *entry = NULL;
 
    if (!(entry = bucket_find_entry (&hm->buckets[hash], key, keylen))) {
@@ -365,7 +365,7 @@ void ds_hmap_remove (ds_hmap_t *hm, const void *key, size_t keylen)
       return;
    }
 
-   uint32_t hash = make_hash (key, keylen) % hm->nbuckets;
+   size_t hash = make_hash (key, keylen) % hm->nbuckets;
    entry_t *e = bucket_find_entry (&hm->buckets[hash], key, keylen);
    if (!e)
       return;
@@ -441,9 +441,9 @@ float ds_hmap_load (ds_hmap_t *hm)
    if (!hm)
       return 0.0;
 
-   float numer = ds_hmap_num_entries (hm);
-   float denom = ds_hmap_num_buckets (hm);
-   return numer / denom;
+   size_t numer = ds_hmap_num_entries (hm);
+   size_t denom = ds_hmap_num_buckets (hm);
+   return (float)numer / (float)denom;
 }
 
 size_t ds_hmap_num_buckets (ds_hmap_t *hm)
@@ -481,11 +481,11 @@ float ds_hmap_stddev_entries (ds_hmap_t *hm)
    float dev = 0.0;
 
    for (size_t i=0; i<hm->nbuckets; i++) {
-      float diff = avg - hm->buckets[i].nelems;
+      float diff = avg - (float)(hm->buckets[i].nelems);
       dev += diff * diff;
    }
 
-   float stddev = sqrtf (dev / hm->nbuckets);
+   float stddev = sqrtf (dev / (float)hm->nbuckets);
 
    return stddev;
 }
