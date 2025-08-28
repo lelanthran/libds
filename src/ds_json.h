@@ -25,8 +25,17 @@ extern "C" {
 
    void ds_json_del (ds_json_t *json);
 
-   ds_json_t *ds_json_parse_string (const char *src);
-   ds_json_t *ds_json_parse_stream (FILE *infile);
+   ds_json_t *ds_json_parse_string (const char *name, const char *src);
+   ds_json_t *ds_json_parse_stream (const char *name, FILE *infile);
+
+   // Caller must free each element and the returned array.
+   char **ds_json_messages_get (void);
+
+   // Free all the messages
+   void ds_json_messages_clear (void);
+
+   // Make a human readable string; caller must free the returned value
+   char *ds_json_stringify (ds_json_t *json);
 
 
 #ifdef __cplusplus

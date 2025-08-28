@@ -115,24 +115,44 @@ cleanup:
 int test_json_string (void)
 {
    int ret = EXIT_FAILURE;
-   ds_json_t *root = NULL;
+   ds_json_t *obj = NULL;
    char *test_string = NULL;
+   char *output = NULL;
 
    if (!(test_string = fslurp (FNAME_HAPPY_PATH))) {
       EPRINTF ("Failed to read file [%s], aborting\n", FNAME_HAPPY_PATH);
       goto cleanup;
    }
 
-   if (!(root = ds_json_parse_string (test_string))) {
+   if (!(obj = ds_json_parse_string ("test-string", test_string))) {
       EPRINTF ("Failed to parse string from [%s]\n", FNAME_HAPPY_PATH);
       goto cleanup;
    }
+   if (!(output = ds_json_stringify (obj))) {
+      EPRINTF ("Failed to stringify object\n");
+      goto cleanup;
+   }
+   printf ("========\n%s\n=========\n", output);
 
    ret = EXIT_SUCCESS;
 
 cleanup:
    free (test_string);
-   ds_json_del (root);
+   free (output);
+   char **messages = ds_json_messages_get();
+   size_t nmessages = 0;
+   for (size_t i=0; messages && messages[i]; i++) {
+      nmessages++;
+   }
+   printf ("Messages: %zu\n", nmessages);
+   for (size_t i=0; messages && messages[i]; i++) {
+      printf ("[%zu]: %s\n", i, messages[i]);
+      free (messages[i]);
+   }
+   free (messages);
+   ds_json_messages_clear ();
+
+   ds_json_del (obj);
    return ret;
 }
 
