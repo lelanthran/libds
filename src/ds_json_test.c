@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "ds_json.h"
+#include "ds_str.h"
 
 #define EPRINTF(...)       do {\
    fprintf (stderr, "%s:%i ", __FILE__, __LINE__);\
@@ -112,12 +113,74 @@ cleanup:
    return ret;
 }
 
+static char **str_split (const char *src, char delim)
+{
+   size_t nitems = 1;
+   char **ret = NULL;
+   char *start = NULL, *end = NULL;
+   char *tmp = ds_str_dup (src);
+   if (!tmp) {
+      fprintf (stderr, "Failed to allocate temporary string\n");
+      return NULL;
+   }
+
+   start = tmp;
+   while (start) {
+      nitems++;
+      start++;
+      start = strchr (start, delim);
+   }
+   if (!(ret = calloc (nitems + 1, sizeof *ret))) {
+      fprintf (stderr, "Failed to allocate return value array\n");
+      free (tmp);
+      return NULL;
+   }
+
+   start = tmp;
+   size_t index = 0;
+   while (start) {
+      end = strchr (start, delim);
+      if (end) {
+         *end = 0;
+      }
+      ret[index++] = ds_str_dup (start);
+      start = end;
+      if (start)
+         start++;
+   }
+   ret[index] = ds_str_dup (start);
+
+   free (tmp);
+   return ret;
+}
+
+static void str_array_free (char ***array)
+{
+   char **a = *array;
+   for (size_t i=0; a[i]; i++) {
+      free (a[i]);
+   }
+
+   free (*array);
+   *array = NULL;
+}
+
+
 int test_json_string (void)
 {
    int ret = EXIT_FAILURE;
    ds_json_t *obj = NULL;
    char *test_string = NULL;
    char *output = NULL;
+
+   static const char *spaths[] = {
+      "numbers/number-1",
+      "symbols",
+      "arrays/simple[2]",
+      "arrays/composite[0]/obj-0",
+   };
+   static const size_t nspaths = sizeof spaths/sizeof spaths[0];
+
 
    if (!(test_string = fslurp (FNAME_HAPPY_PATH))) {
       EPRINTF ("Failed to read file [%s], aborting\n", FNAME_HAPPY_PATH);
@@ -133,6 +196,15 @@ int test_json_string (void)
       goto cleanup;
    }
    printf ("========\n%s\n=========\n", output);
+
+   for (size_t i=0; i<nspaths; i++) {
+      char **path = str_split (spaths[i], '/');
+      const ds_json_t *target = ds_json_geta (obj, path);
+      char *tmp = ds_json_stringify (target);
+      printf ("[%s] => %s\n", spaths[i], tmp);
+      free (tmp);
+      str_array_free (&path);
+   }
 
    ret = EXIT_SUCCESS;
 

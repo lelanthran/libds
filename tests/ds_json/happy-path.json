@@ -20,7 +20,7 @@
    "arrays": {
       "simple":      ["a", null, 123.456e78, false],
       "composite":   [
-         {  "obj-0": "value-0" },
+         {  "obj-0": [ "value-0.1", "value-0.2" ] },
          {  "obj-1": "value-1" },
          {  "obj-2": "value-2" }
       ]

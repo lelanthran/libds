@@ -613,7 +613,11 @@ static ds_json_t *json_read_object (void *handle,
 #undef READ_PARAMS
    } while (terminator == ',');
 
-   printf ("Terminator [%c]\n", terminator);
+   if (terminator != '}') {
+      ERROR(fname, *line, *cpos, "Expected '}', found '%c'\n", terminator);
+      goto cleanup;
+   }
+
 
    error = false;
 cleanup:
@@ -642,7 +646,7 @@ static ds_json_t *json_read_array (void *handle,
       goto cleanup;
    }
 
-   char comma = 0;
+   char terminator = 0;
    do {
       ds_json_t *value = json_read_value (handle, extra, fname, line, cpos,
                                           fptr_getc, fptr_ungetc);
@@ -654,10 +658,13 @@ static ds_json_t *json_read_array (void *handle,
          ERROR (fname, *line, *cpos, "OOM error\n");
          goto cleanup;
       }
-      comma = read_char (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
-   } while (comma == ',');
+      terminator = read_char (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
+   } while (terminator == ',');
 
-   fptr_ungetc (handle, extra, line, cpos);
+   if (terminator != ']') {
+      ERROR(fname, *line, *cpos, "Expected ']', found '%c'\n", terminator);
+      goto cleanup;
+   }
 
    error = false;
 cleanup:
@@ -885,7 +892,7 @@ struct stringify_t {
    char *output;
 };
 
-static void stringify (ds_json_t *json, struct stringify_t *sobj);
+static void stringify (const ds_json_t *json, struct stringify_t *sobj);
 
 static void stringify_object_keys (const void *key, size_t keylen,
                                    void *data, size_t datalen,
@@ -897,15 +904,13 @@ static void stringify_object_keys (const void *key, size_t keylen,
    (void)datalen;
    struct stringify_t *obj = sobj;
 
-   printf ("Processing key [%s]\n", name);
-
    ds_str_append (&obj->output, "\n", NULL);
    INDENT(obj);
    ds_str_append (&obj->output, "\"", name, "\": ", NULL);
    stringify (value, sobj);
 }
 
-void stringify_object (ds_json_t *json, struct stringify_t *sobj)
+void stringify_object (const ds_json_t *json, struct stringify_t *sobj)
 {
    (void)json;
    ds_str_append (&sobj->output, "{", NULL);
@@ -917,25 +922,37 @@ void stringify_object (ds_json_t *json, struct stringify_t *sobj)
    ds_str_append (&sobj->output, "} ", NULL);
 }
 
-void stringify_array (ds_json_t *json, struct stringify_t *sobj)
+void stringify_array (const ds_json_t *json, struct stringify_t *sobj)
 {
-   (void)sobj;
-   (void)json;
-   // TODO: Stopped here last - iterate over the array
+   const char *delim = "";
+   size_t nitems = ds_array_length (json->value._array);
+   ds_str_append (&sobj->output, "[ ", NULL);
+   for (size_t i=0; i<nitems; i++) {
+      char *tmp = ds_json_stringify (ds_array_get (json->value._array, i));
+      if (!tmp) {
+         // ERROR
+      }
+      if (!(ds_str_append (&sobj->output, delim, tmp, NULL))) {
+         // ERROR
+      }
+      free (tmp);
+      delim = ", ";
+   }
+   ds_str_append (&sobj->output, " ]", NULL);
 }
 
-void stringify_string (ds_json_t *json, struct stringify_t *sobj)
+void stringify_string (const ds_json_t *json, struct stringify_t *sobj)
 {
    (void)sobj;
    ds_str_append (&sobj->output, "\"", json->value._string, "\"", NULL);
 }
 
-void stringify_symbol (ds_json_t *json, struct stringify_t *sobj)
+void stringify_symbol (const ds_json_t *json, struct stringify_t *sobj)
 {
    ds_str_append (&sobj->output, json->value._string, NULL);
 }
 
-void stringify_number (ds_json_t *json, struct stringify_t *sobj)
+void stringify_number (const ds_json_t *json, struct stringify_t *sobj)
 {
    // bool error = true;
    char sign[2] = { 0, 0 };
@@ -970,7 +987,7 @@ cleanup:
 }
 
 
-static void stringify (ds_json_t *json, struct stringify_t *sobj)
+static void stringify (const ds_json_t *json, struct stringify_t *sobj)
 {
    if (!json)
       return;
@@ -987,7 +1004,7 @@ static void stringify (ds_json_t *json, struct stringify_t *sobj)
 }
 
 
-char *ds_json_stringify (ds_json_t *json)
+char *ds_json_stringify (const ds_json_t *json)
 {
    struct stringify_t *sobj = calloc (1, sizeof *sobj);
    if (!sobj)
@@ -996,5 +1013,87 @@ char *ds_json_stringify (ds_json_t *json)
    char *ret = sobj->output;
    free (sobj);
    return ret;
+}
+
+enum ds_json_object_type_t ds_json_type (const ds_json_t *json)
+{
+   return json ? json->type : ds_json_UNKNOWN;
+}
+
+char **ds_json_fieldnames (const ds_json_t *json)
+{
+   char **ret = NULL;
+
+   if (!json || json->type != ds_json_OBJECT)
+      return NULL;
+
+   if ((ds_hmap_keys (json->value._kvpairs, (void ***)&ret, NULL)) == 0) {
+      // ERROR
+      free (ret);
+      ret = NULL;
+   }
+
+   return ret;
+}
+
+ds_json_t *ds_json_get_index (const ds_json_t *json, size_t index)
+{
+   if (!json || json->type != ds_json_ARRAY)
+      return NULL;
+
+   return ds_array_get (json->value._array, index);
+}
+
+static const ds_json_t * json_geta (const ds_json_t *obj, char **path)
+{
+   char **names = NULL;
+
+   if (!obj || path[0] == NULL)
+      return obj;
+
+   if (!(names = ds_json_fieldnames (obj)))
+      return NULL;
+
+   for (size_t i=0; names && names[i]; i++) {
+      char *arr_start = strchr (path[0], '[');
+      char *arr_end = strchr (path[0], ']');
+      if (arr_start && !arr_end) {
+         free (names);
+         return NULL;
+      }
+
+      size_t arr_index = (size_t)-1;
+      if (arr_start) {
+         *arr_start = 0;
+         *arr_end = 0;
+         sscanf (&arr_start[1], "%zu", &arr_index);
+      }
+
+      if ((strcmp (names[i], path[0])) == 0) {
+         if (arr_start) {
+            *arr_start = '[';
+            *arr_end = ']';
+         }
+         ds_json_t *found = NULL;
+         ds_hmap_get_str_ptr (obj->value._kvpairs, names[i], (void **)&found);
+         free (names);
+         if (arr_index != (size_t)-1) {
+            return json_geta (ds_json_get_index (found, arr_index), &path[1]);
+         } else {
+            return json_geta (found, &path[1]);
+         }
+      }
+      if (arr_start) {
+         *arr_start = '[';
+         *arr_end = ']';
+      }
+   }
+   free (names);
+   return NULL;
+}
+
+const ds_json_t *ds_json_geta (const ds_json_t *obj, char **path)
+{
+   return json_geta (obj, path);
 }
 
