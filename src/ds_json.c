@@ -401,6 +401,7 @@ static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
       }
       if (!(dst->major_digits = ds_str_dup ("0")))
          return false;
+      fptr_ungetc (handle, extra, line, cpos);
       return true;
    }
 
@@ -415,24 +416,30 @@ static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
                                           fptr_getc, fptr_ungetc))) {
       return false;
    }
-   if ((fptr_getc (handle, extra, line, cpos)) != '.') {
+    c = fptr_getc (handle, extra, line, cpos);
+    if ((c != '.') && c != 'e') {
       fptr_ungetc (handle, extra, line, cpos);
       return true;
    }
-   if (!(dst->minor_digits = read_digits (handle, extra, fname, line, cpos,
-                                          fptr_getc, fptr_ungetc))) {
-      return false;
+   if (c == '.') {
+      if (!(dst->minor_digits = read_digits (handle, extra, fname, line, cpos,
+                                             fptr_getc, fptr_ungetc))) {
+         return false;
+      }
+      c = fptr_getc (handle, extra, line, cpos);
    }
-   if ((fptr_getc (handle, extra, line, cpos)) != 'e') {
+   if (c != 'e') {
       fptr_ungetc (handle, extra, line, cpos);
       return true;
    }
    dst->exp_sign = read_char (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
    if (dst->exp_sign != '+' && dst->exp_sign != '-' && !(isdigit (dst->exp_sign))) {
+      dst->exp_sign = 0;
       fptr_ungetc (handle, extra, line, cpos);
       return false;
    }
    if (isdigit (dst->exp_sign)) {
+      dst->exp_sign = 0;
       fptr_ungetc (handle, extra, line, cpos);
    }
    if (!(dst->exp_digits = read_digits (handle, extra, fname, line, cpos,
@@ -513,6 +520,49 @@ cleanup:
    return ret;
 }
 
+static bool is_symbolchar (int c)
+{
+   static const char *schars =
+      "ABCDEFGHIJLKMNOPQRSTUVWXYZ"
+      "abcdefghijlkmnopqrstuvwxyz"
+      "0123456789"
+      "_";
+   return strchr (schars, (char)c) != NULL;
+}
+
+static char *read_symbol (void *handle,
+                          void *extra,
+                          const char *fname,
+                          size_t *line,
+                          size_t *cpos,
+                          parser_getchar_t *fptr_getc,
+                          parser_getchar_t *fptr_ungetc)
+{
+   bool error = true;
+   int c = 0;
+   char *ret = NULL;
+   swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
+
+   while ((c = fptr_getc (handle, extra, line, cpos)) && is_symbolchar (c)) {
+      char tmp[2] = { (char)c, 0 };
+      if (!(ds_str_append (&ret, tmp, NULL))) {
+         ERROR(fname, *line, *cpos, "OOM error");
+         goto cleanup;
+      }
+   }
+   fptr_ungetc (handle, extra, line, cpos);
+
+   error = false;
+
+cleanup:
+   if (error) {
+      free (ret);
+      ret = NULL;
+   }
+
+   return ret;
+}
+
 static ds_json_t *json_read_object (void *handle,
                                     void *extra,
                                     const char *fname,
@@ -522,17 +572,23 @@ static ds_json_t *json_read_object (void *handle,
                                     parser_getchar_t *fptr_ungetc)
 {
    bool error = true;
-   ds_json_t *ret = json_new_object ();
+   ds_json_t *ret = NULL;
+   char *name = NULL;
+   char colon = 0;
+   ds_json_t *value = NULL;
+   char terminator = 0;
+
    swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
    int c = fptr_getc (handle, extra, line, cpos);
    if (c != '{') {
       ERROR(fname, *line, *cpos, "Expected '{', found '%c'\n", c);
-      return ret;
+      goto cleanup;
    }
-   char *name = NULL;
-   char colon = 0;
-   ds_json_t *value = NULL;
-   char comma = 0;
+
+   if (!(ret = json_new_object())) {
+      ERROR(fname, *line, *cpos, "OOM error");
+      goto cleanup;
+   }
 
    do {
       free (name);
@@ -551,10 +607,13 @@ static ds_json_t *json_read_object (void *handle,
          ds_json_del (value);
          goto cleanup;
       }
+      printf ("Read field [%s]\n", name);
       free (name); name = NULL;
-      comma = read_char (READ_PARAMS);
+      terminator = read_char (READ_PARAMS);
 #undef READ_PARAMS
-   } while (comma == ',');
+   } while (terminator == ',');
+
+   printf ("Terminator [%c]\n", terminator);
 
    error = false;
 cleanup:
@@ -636,7 +695,7 @@ static ds_json_t *json_read_symbol (void *handle,
                                     parser_getchar_t *fptr_getc,
                                     parser_getchar_t *fptr_ungetc)
 {
-   char *tmp = read_string (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
+   char *tmp = read_symbol (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
    ds_json_t *ret = json_new_string (ds_json_SYMBOL, tmp);
    if (!ret) {
       free (tmp);
@@ -746,7 +805,7 @@ static int parser_string_ungetchar (const char *src, size_t *index,
    int ret = src[*index];
    if (ret == '\n') {
       *line = *line - 1;
-      (void)cpos;    // cpos is essentially inaccurate now until the next linefeed
+      (void)cpos;    // cpos is essentially inaccurate now, until the next linefeed
    }
    return ret;
 }
