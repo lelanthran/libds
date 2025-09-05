@@ -9,11 +9,11 @@
 
 static void print_stats (ds_hmap_t *hm, const char *msg)
 {
-   float lf = ds_hmap_load (hm);
+   double lf = (double)ds_hmap_load (hm);
    size_t nbuckets = ds_hmap_num_buckets (hm);
    size_t nentries = ds_hmap_num_entries (hm);
    size_t mean_entries = ds_hmap_mean_entries (hm);
-   float stddev_entries = ds_hmap_stddev_entries (hm);
+   double stddev_entries = (double)ds_hmap_stddev_entries (hm);
    size_t min_entries = ds_hmap_min_entries (hm);
    size_t max_entries = ds_hmap_max_entries (hm);
    size_t range_entries = ds_hmap_range_entries (hm);
@@ -22,7 +22,7 @@ static void print_stats (ds_hmap_t *hm, const char *msg)
 
    ds_hmap_print_freq (hm, msg, stdout);
 
-   printf ("Load factor:                  %.2f\n", lf);
+   printf ("Load factor:                  %.2lf\n", lf);
    printf ("Bucket count:                 %zu\n", nbuckets);
    printf ("Entry count:                  %zu\n", nentries);
    printf ("Avg entries/bucket:           %zu\n", mean_entries);
