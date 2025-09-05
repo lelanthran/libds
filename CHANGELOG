@@ -1,8 +1,6 @@
-# v1.0.7 - ???
+# v1.0.7 - Fri 05 Sep 2025 09:21:14 SAST
 Features
-1. Added stack datatype.
-
-
+1. Added stack, JSON , symtree and tree datatypes.
 
 
 # v1.0.6 - Fri 04 Nov 2022 07:28:21 SAST
