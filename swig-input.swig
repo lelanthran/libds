@@ -2,13 +2,12 @@
 %include "src/ds_array.h"
 %include "src/ds_hmap.h"
 %include "src/ds_ll.h"
+%include "src/ds_table.h"
 %{
 #include "src/ds_array.h"
 #include "src/ds_hmap.h"
 #include "src/ds_ll.h"
-#include "src/ds_str.h"
-%}
-
+#include "src/ds_table.h"
 
    char *ds_str_dup (const char *src);
 
@@ -29,3 +28,6 @@
                           const char *olds, const char *news, ...);
 
    char *ds_str_substring (const char *src, size_t from_position, size_t nchars);
+%}
+
+

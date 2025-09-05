@@ -1,0 +1,6 @@
+src/*.d
+*.swp
+include/
+debug/
+src/swig_ds.c
+wrappers/

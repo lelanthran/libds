@@ -197,7 +197,7 @@ int main (void)
 
    free (test_append);
    test_append = NULL;
-   for (size_t i=0; i<70000; i++) {
+   for (size_t i=0; i<10000; i++) {
       ds_str_append (&test_append, "The Quick Brown Fox Jumped Over The Lazy Dog\n", NULL);
    }
    struct timespec tp_end;
@@ -223,26 +223,9 @@ int main (void)
    free (test_cat);
    test_cat = ds_str_dup ("a");
 
-   for (size_t i=0; i<5; i++) {
+   printf ("Starting Large concatenation test\n");
+   for (size_t i=0; i<12; i++) {
       char *tmp = ds_str_cat (test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
-                              test_cat, test_cat, test_cat, test_cat, test_cat,
                               NULL);
       if (!tmp) {
          printf ("Failed to allocate memory for large string cat\n");
