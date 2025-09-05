@@ -312,10 +312,50 @@ static ds_json_t *json_new_number (char sign,
 
 static void make_utf8(char *dst, uint64_t codepoint)
 {
-   (void)dst;
-   (void)codepoint;
-   // TODO:
+    // A Unicode codepoint must be between 0 and 0x10FFFF, and cannot be a
+    // surrogate codepoint (0xD800 to 0xDFFF).
+    if (codepoint > 0x10FFFF || (codepoint >= 0xD800 && codepoint <= 0xDFFF))
+    {
+        *dst = '\0';
+        return;
+    }
+
+    // --- 1-byte sequence (ASCII) ---
+    // Codepoints from 0x00 to 0x7F
+    if (codepoint < 0x80)
+    {
+        dst[0] = (char)codepoint;
+        dst[1] = '\0';
+    }
+    // --- 2-byte sequence ---
+    // Codepoints from 0x80 to 0x7FF
+    else if (codepoint < 0x800)
+    {
+        dst[0] = (char)((codepoint >> 6) | 0xC0);  // 110xxxxx
+        dst[1] = (char)((codepoint & 0x3F) | 0x80); // 10xxxxxx
+        dst[2] = '\0';
+    }
+    // --- 3-byte sequence ---
+    // Codepoints from 0x800 to 0xFFFF
+    else if (codepoint < 0x10000)
+    {
+        dst[0] = (char)((codepoint >> 12) | 0xE0); // 1110xxxx
+        dst[1] = (char)(((codepoint >> 6) & 0x3F) | 0x80); // 10xxxxxx
+        dst[2] = (char)((codepoint & 0x3F) | 0x80); // 10xxxxxx
+        dst[3] = '\0';
+    }
+    // --- 4-byte sequence ---
+    // Codepoints from 0x10000 to 0x10FFFF
+    else
+    {
+        dst[0] = (char)((codepoint >> 18) | 0xF0); // 11110xxx
+        dst[1] = (char)(((codepoint >> 12) & 0x3F) | 0x80); // 10xxxxxx
+        dst[2] = (char)(((codepoint >> 6) & 0x3F) | 0x80); // 10xxxxxx
+        dst[3] = (char)((codepoint & 0x3F) | 0x80); // 10xxxxxx
+        dst[4] = '\0';
+    }
 }
+
 
 /* ************************************************************
  * Parser functions.
@@ -495,7 +535,7 @@ static char *read_string (void *handle,
                   sc[i] = (char)digit;
                }
 
-               if ((sscanf (sc, "%" PRIu64, &ic)) != 1)
+               if ((sscanf (sc, "%" PRIx64, &ic)) != 1)
                   goto cleanup;
 
                make_utf8 (tmp, ic);
@@ -883,7 +923,7 @@ void ds_json_messages_clear (void)
    g_messages = NULL;
 }
 
-#define INDENT(o)    for (size_t i=0; i<o->depth; i++) {\
+#define INDENT(o)    for (size_t i=0; i<(o->depth * 3); i++) {\
    ds_str_append (&o->output, " ", NULL);\
 }
 
@@ -894,32 +934,33 @@ struct stringify_t {
 
 static void stringify (const ds_json_t *json, struct stringify_t *sobj);
 
-static void stringify_object_keys (const void *key, size_t keylen,
-                                   void *data, size_t datalen,
-                                   void *sobj)
-{
-   const char *name = key;
-   (void)keylen;
-   ds_json_t *value = data;
-   (void)datalen;
-   struct stringify_t *obj = sobj;
-
-   ds_str_append (&obj->output, "\n", NULL);
-   INDENT(obj);
-   ds_str_append (&obj->output, "\"", name, "\": ", NULL);
-   stringify (value, sobj);
-}
-
 void stringify_object (const ds_json_t *json, struct stringify_t *sobj)
 {
-   (void)json;
-   ds_str_append (&sobj->output, "{", NULL);
+   char **keys = NULL;
+   const char *delim = "";
+   if (!(ds_hmap_keys (json->value._kvpairs, (void ***)&keys, NULL))) {
+      // ERROR
+   }
+
+   ds_str_append (&sobj->output, "{\n", NULL);
    sobj->depth++;
-   ds_hmap_iterate (json->value._kvpairs, stringify_object_keys, sobj);
-   sobj->depth--;
+
+   for (size_t i=0; keys && keys[i]; i++) {
+      ds_json_t *value = NULL;
+      ds_str_append (&sobj->output, delim, NULL);
+      delim = ",\n";
+      INDENT(sobj);
+      ds_str_append (&sobj->output, "\"", keys[i], "\": ", NULL);
+      ds_hmap_get_str_ptr (json->value._kvpairs, keys[i], (void **)&value);
+      stringify (value, sobj);
+   }
+
    ds_str_append (&sobj->output, "\n", NULL);
+   sobj->depth--;
    INDENT(sobj);
-   ds_str_append (&sobj->output, "} ", NULL);
+   ds_str_append (&sobj->output, "}", NULL);
+
+   free (keys);
 }
 
 void stringify_array (const ds_json_t *json, struct stringify_t *sobj)
@@ -927,24 +968,46 @@ void stringify_array (const ds_json_t *json, struct stringify_t *sobj)
    const char *delim = "";
    size_t nitems = ds_array_length (json->value._array);
    ds_str_append (&sobj->output, "[ ", NULL);
+   sobj->depth++;
    for (size_t i=0; i<nitems; i++) {
-      char *tmp = ds_json_stringify (ds_array_get (json->value._array, i));
-      if (!tmp) {
+      if (!(ds_str_append (&sobj->output, delim, NULL))) {
          // ERROR
       }
-      if (!(ds_str_append (&sobj->output, delim, tmp, NULL))) {
-         // ERROR
-      }
-      free (tmp);
       delim = ", ";
+      stringify (ds_array_get (json->value._array, i), sobj);
    }
    ds_str_append (&sobj->output, " ]", NULL);
+   sobj->depth--;
 }
 
 void stringify_string (const ds_json_t *json, struct stringify_t *sobj)
 {
-   (void)sobj;
-   ds_str_append (&sobj->output, "\"", json->value._string, "\"", NULL);
+   size_t slen = strlen (json->value._string);
+   char *tmp = malloc (2 * slen); // Worst case scenario, all characters are escaped
+   if (!tmp) {
+      // ERROR
+      return;
+   }
+
+   char *src = json->value._string;
+   char *dst = tmp;
+   while (*src) {
+      switch (*src) {
+         // Note, we do not convert UTF8 back to `\uxxxx`. UTF8 is emitted as-is.
+         case '\n':  *dst++ = '\\'; *dst++ = 'n';   src++;  break;
+         case '\r':  *dst++ = '\\'; *dst++ = 'r';   src++;  break;
+         case '\t':  *dst++ = '\\'; *dst++ = 't';   src++;  break;
+         case '\b':  *dst++ = '\\'; *dst++ = 'b';   src++;  break;
+         case '\f':  *dst++ = '\\'; *dst++ = 'f';   src++;  break;
+         case '\"':  *dst++ = '\\'; *dst++ = '"';   src++;  break;
+         case '\\':  *dst++ = '\\'; *dst++ = '\\';  src++;  break;
+         default:    *dst++ = *src++;                       break;
+      }
+   }
+   *dst = 0;
+
+   ds_str_append (&sobj->output, "\"", tmp, "\"", NULL);
+   free (tmp);
 }
 
 void stringify_symbol (const ds_json_t *json, struct stringify_t *sobj)
