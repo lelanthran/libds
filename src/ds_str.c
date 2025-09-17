@@ -152,7 +152,11 @@ size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap)
    char *tmp = NULL;
    va_list ac;
 
-   *dst = NULL;
+   if (*dst) {
+      free (*dst);
+      *dst = NULL;
+   }
+
 
    va_copy (ac, ap);
    int rc = vsnprintf (*dst, ret, fmt, ac);
