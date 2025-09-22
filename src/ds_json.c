@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <inttypes.h>
 #include <ctype.h>
 
@@ -239,7 +240,7 @@ cleanup:
 }
 
 static const char *message (const char *srcfile, int srcline, const char *type, const char *fname,
-                             size_t line, size_t cpos,
+                            size_t line, size_t cpos,
                             const char *fmts,
                             ...)
 {
@@ -893,6 +894,95 @@ ds_json_t *ds_json_parse_stream (const char *name, FILE *infile)
                       (parser_ungetchar_t *)parser_stream_ungetchar);
 }
 
+ds_json_t *ds_json_parse_value (const char *value)
+{
+   size_t line = 0, cpos = 0;
+   size_t index = 0;
+   char *src = ds_str_dup (value);
+   if (!src)
+      return NULL;
+
+   ds_json_t *ret = json_read_value ((void *)src, &index, "ignore",
+                                     &line, &cpos,
+                                     (parser_getchar_t *)parser_string_getchar,
+                                     (parser_ungetchar_t *)parser_string_ungetchar);
+   free (src);
+   return ret;
+}
+
+ds_json_t *ds_json_object_new (void)
+{
+   return json_new_object ();
+}
+
+ds_json_t *ds_json_array_new (void)
+{
+   return json_new_array ();
+}
+
+ds_json_t *ds_json_string_new (const char *src)
+{
+   ds_json_t *ret = calloc (1, sizeof *ret);
+   if (ret) {
+      ret->type = ds_json_STRING;
+      if (!(ret->value._string = ds_str_dup (src))) {
+         free (ret);
+         ret = NULL;
+      }
+   }
+
+   return ret;
+}
+
+ds_json_t *ds_json_symbol_new (const char *src)
+{
+   ds_json_t *ret = calloc (1, sizeof *ret);
+   if (ret) {
+      ret->type = ds_json_SYMBOL;
+      if (!(ret->value._string = ds_str_dup (src))) {
+         free (ret);
+         ret = NULL;
+      }
+   }
+
+   return ret;
+}
+
+ds_json_t *ds_json_int_new (int64_t src)
+{
+   char tmp[50];
+   snprintf (tmp, sizeof tmp, "%" PRIi64, src);
+   return ds_json_parse_value (tmp);
+}
+
+ds_json_t *ds_json_float_new (double src)
+{
+   char tmp[50];
+   snprintf (tmp, sizeof tmp, "%g", src);
+   return ds_json_parse_value (tmp);
+}
+
+
+bool ds_json_object_append (ds_json_t *obj, const char *name, ds_json_t *value)
+{
+   if (obj->type != ds_json_OBJECT)
+      return false;
+
+   if (!(ds_hmap_set_str_ptr (obj->value._kvpairs, name, value)))
+      return false;
+
+   return true;
+}
+
+bool ds_json_array_append (ds_json_t *obj, ds_json_t *value)
+{
+   if (obj->type != ds_json_ARRAY)
+      return false;
+
+   return ds_array_ins_tail (obj->value._array, value) != NULL;
+}
+
+
 
 char **ds_json_messages_get (void)
 {
@@ -1099,7 +1189,7 @@ char **ds_json_fieldnames (const ds_json_t *json)
    return ret;
 }
 
-ds_json_t *ds_json_get_index (const ds_json_t *json, size_t index)
+ds_json_t *ds_json_array_get (const ds_json_t *json, size_t index)
 {
    if (!json || json->type != ds_json_ARRAY)
       return NULL;
@@ -1107,7 +1197,7 @@ ds_json_t *ds_json_get_index (const ds_json_t *json, size_t index)
    return ds_array_get (json->value._array, index);
 }
 
-static const ds_json_t * json_geta (const ds_json_t *obj, char **path)
+static const ds_json_t * json_object_geta (const ds_json_t *obj, char **path)
 {
    char **names = NULL;
 
@@ -1141,9 +1231,9 @@ static const ds_json_t * json_geta (const ds_json_t *obj, char **path)
          ds_hmap_get_str_ptr (obj->value._kvpairs, names[i], (void **)&found);
          free (names);
          if (arr_index != (size_t)-1) {
-            return json_geta (ds_json_get_index (found, arr_index), &path[1]);
+            return json_object_geta (ds_json_array_get (found, arr_index), &path[1]);
          } else {
-            return json_geta (found, &path[1]);
+            return json_object_geta (found, &path[1]);
          }
       }
       if (arr_start) {
@@ -1155,8 +1245,8 @@ static const ds_json_t * json_geta (const ds_json_t *obj, char **path)
    return NULL;
 }
 
-const ds_json_t *ds_json_geta (const ds_json_t *obj, char **path)
+const ds_json_t *ds_json_object_geta (const ds_json_t *obj, char **path)
 {
-   return json_geta (obj, path);
+   return json_object_geta (obj, path);
 }
 
