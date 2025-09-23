@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "ds_json.h"
 #include "ds_str.h"
@@ -112,10 +113,10 @@ cleanup:
    return ret;
 }
 
-static char **str_split (const char *src, char delim)
+static const char **str_split (const char *src, char delim)
 {
    size_t nitems = 1;
-   char **ret = NULL;
+   const char **ret = NULL;
    char *start = NULL, *end = NULL;
    char *tmp = ds_str_dup (src);
    if (!tmp) {
@@ -186,7 +187,7 @@ int test_json_string (void)
       goto cleanup;
    }
 
-   if (!(obj = ds_json_parse_string ("test-string", test_string))) {
+   if (!(obj = ds_json_parse_string (FNAME_HAPPY_PATH, test_string))) {
       EPRINTF ("Failed to parse string from [%s]\n", FNAME_HAPPY_PATH);
       goto cleanup;
    }
@@ -197,12 +198,12 @@ int test_json_string (void)
    printf ("========\n%s\n=========\n", output);
 
    for (size_t i=0; i<nspaths; i++) {
-      char **path = str_split (spaths[i], '/');
+      const char **path = str_split (spaths[i], '/');
       const ds_json_t *target = ds_json_object_geta (obj, path);
       char *tmp = ds_json_stringify (target);
       printf ("[%s] => %s\n", spaths[i], tmp);
       free (tmp);
-      str_array_free (&path);
+      str_array_free ((char ***)&path);
    }
 
    ret = EXIT_SUCCESS;
@@ -325,11 +326,13 @@ int main (void)
    for (size_t i=0; i<sizeof tests  /sizeof tests[0]; i++) {
       if ((tests[i].fptr ()) != EXIT_SUCCESS) {
          EPRINTF ("[%s] test failure\n", tests[i].name);
+         fflush (stdout);
+         fflush (stderr);
          goto cleanup;
-      } else {
-         printf ("[%s] Passed\n", tests[i].name);
       }
-
+      printf ("[%s] Passed\n", tests[i].name);
+      fflush (stdout);
+      fflush (stderr);
    }
 
    ret = EXIT_SUCCESS;

@@ -38,6 +38,13 @@ extern "C" {
    ds_json_t *ds_json_int_new (int64_t src);
    ds_json_t *ds_json_float_new (double src);
 
+   // Retrieve the typed value of the json object - caller must not free this for
+   // strings or symbols. On error, NULL, INT64_MAX or NAN, depending on type
+   const char *ds_json_string_value (const ds_json_t *json);
+   const char *ds_json_symbol_value (const ds_json_t *json);
+   int64_t ds_json_int_value (const ds_json_t *json);
+   double ds_json_float_value (const ds_json_t *json);
+
    // Add elements to a JSON object or a JSON array. Note that ownership is
    // taken by the obj/array in question and caller must not free value
    bool ds_json_object_append (ds_json_t *obj, const char *name, ds_json_t *value);
@@ -63,13 +70,14 @@ extern "C" {
    // Gets the value from an array at the specified index, or NULL if the specified
    // json object is not an array or if the index is out of range
    ds_json_t *ds_json_array_get (const ds_json_t *json, size_t index);
+   size_t ds_json_array_length (const ds_json_t *json);
 
    // Retrieve a value from an object in two different ways:
    // 1. A null-terminated array of pointers to each path component
    // 2. A null-terminated parameter list to each path component
-   const ds_json_t *ds_json_object_geta (const ds_json_t *obj, char **path);
-   const ds_json_t *ds_json_object_getv (const ds_json_t *obj, va_list ap);
-   const ds_json_t *ds_json_object_get (const ds_json_t *obj, ...);
+   const ds_json_t *ds_json_object_geta (const ds_json_t *obj, const char **path);
+   const ds_json_t *ds_json_object_getv (const ds_json_t *obj, const char *p1, va_list ap);
+   const ds_json_t *ds_json_object_get (const ds_json_t *obj, const char *p1, ...);
 
 #ifdef __cplusplus
 };

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "ds_json.h"
 #include "ds_array.h"
@@ -507,6 +508,11 @@ static char *read_string (void *handle,
    int c = fptr_getc (handle, extra, line, cpos);
    if (c != '"')
       return NULL;
+   c = fptr_getc (handle, extra, line, cpos);
+   if (c == '"') { // Empty string
+      return ds_str_dup ("");
+   }
+   fptr_ungetc (handle, extra, line, cpos);
 
    char *ret = NULL;
 
@@ -619,17 +625,24 @@ static ds_json_t *json_read_object (void *handle,
    ds_json_t *value = NULL;
    char terminator = 0;
 
+   if (!(ret = json_new_object())) {
+      ERROR(fname, *line, *cpos, "OOM error");
+      goto cleanup;
+   }
+
    swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
    int c = fptr_getc (handle, extra, line, cpos);
    if (c != '{') {
       ERROR(fname, *line, *cpos, "Expected '{', found '%c'\n", c);
       goto cleanup;
    }
-
-   if (!(ret = json_new_object())) {
-      ERROR(fname, *line, *cpos, "OOM error");
+   swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
+   c = fptr_getc (handle, extra, line, cpos);
+   if (c == '}') { // Empty object
+      error = false;
       goto cleanup;
    }
+   fptr_ungetc (handle, extra, line, cpos);
 
    do {
       free (name);
@@ -662,7 +675,8 @@ static ds_json_t *json_read_object (void *handle,
 
    error = false;
 cleanup:
-   ret->error = error;
+   if (ret)
+      ret->error = error;
    free (name);
    return ret;
 }
@@ -686,6 +700,13 @@ static ds_json_t *json_read_array (void *handle,
       ERROR(fname, *line, *cpos, "Expected '[', got '%c'\n", c);
       goto cleanup;
    }
+   swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
+   c = fptr_getc (handle, extra, line, cpos);
+   if (c == ']') { // Empty array
+      error = false;
+      goto cleanup;
+   }
+   fptr_ungetc (handle, extra, line, cpos);
 
    char terminator = 0;
    do {
@@ -766,6 +787,7 @@ static ds_json_t *json_read_number (void *handle,
                                     parser_getchar_t *fptr_ungetc)
 {
    ds_json_number_t number;
+   memset (&number, 0, sizeof number);
    bool error = read_number (&number, handle, extra, fname, line, cpos,
                              fptr_getc, fptr_ungetc);
    ds_json_t *ret = json_new_number (number.sign,
@@ -962,6 +984,53 @@ ds_json_t *ds_json_float_new (double src)
    return ds_json_parse_value (tmp);
 }
 
+const char *ds_json_string_value (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_STRING)
+      return NULL;
+   return json->value._string;
+}
+
+const char *ds_json_symbol_value (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_SYMBOL)
+      return NULL;
+   return json->value._string;
+}
+
+int64_t ds_json_int_value (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_NUMBER ||
+       json->value._number.minor_digits[0] || json->value._number.exp_digits)
+      return INT64_MAX;
+   int64_t ret = 0;
+   if ((sscanf (json->value._number.major_digits, "%" PRIi64, &ret)) != 1)
+      return INT64_MAX;
+   return ret;
+}
+
+double ds_json_float_value (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_NUMBER)
+      return (double)NAN;
+
+   char tmp[100];
+   char sign[2] = { json->value._number.sign, 0 };
+   char exp_sign[2] = { json->value._number.exp_sign, 0 };
+   snprintf (tmp, sizeof tmp, "%s%s.%se%s%s",
+             sign,
+             json->value._number.major_digits,
+             json->value._number.minor_digits,
+             exp_sign,
+             json->value._number.exp_digits);
+
+   double ret = 0;
+   if ((sscanf (tmp, "%lf", &ret)) != 1)
+      return (double)NAN;
+
+   return ret;
+}
+
 
 bool ds_json_object_append (ds_json_t *obj, const char *name, ds_json_t *value)
 {
@@ -1139,6 +1208,10 @@ cleanup:
    return;
 }
 
+static void stringify_message (struct stringify_t *sobj, const char *message)
+{
+   ds_str_append (&sobj->output, message, NULL);
+}
 
 static void stringify (const ds_json_t *json, struct stringify_t *sobj)
 {
@@ -1146,12 +1219,12 @@ static void stringify (const ds_json_t *json, struct stringify_t *sobj)
       return;
 
    switch (json->type) {
-      case ds_json_UNKNOWN: ds_str_dup ("ERROR");           break;
-      case ds_json_OBJECT:  stringify_object (json, sobj);  break;
-      case ds_json_ARRAY:   stringify_array (json, sobj);   break;
-      case ds_json_STRING:  stringify_string (json, sobj);  break;
-      case ds_json_SYMBOL:  stringify_symbol (json, sobj);  break;
-      case ds_json_NUMBER:  stringify_number (json, sobj);  break;
+      case ds_json_UNKNOWN: stringify_message   (sobj, "ERROR"); break;
+      case ds_json_OBJECT:  stringify_object    (json, sobj);    break;
+      case ds_json_ARRAY:   stringify_array     (json, sobj);    break;
+      case ds_json_STRING:  stringify_string    (json, sobj);    break;
+      case ds_json_SYMBOL:  stringify_symbol    (json, sobj);    break;
+      case ds_json_NUMBER:  stringify_number    (json, sobj);    break;
    }
 
 }
@@ -1197,7 +1270,15 @@ ds_json_t *ds_json_array_get (const ds_json_t *json, size_t index)
    return ds_array_get (json->value._array, index);
 }
 
-static const ds_json_t * json_object_geta (const ds_json_t *obj, char **path)
+size_t ds_json_array_length (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_ARRAY)
+      return 0;
+
+   return ds_array_length (json->value._array);
+}
+
+static const ds_json_t * json_object_geta (const ds_json_t *obj, const char **path)
 {
    char **names = NULL;
 
@@ -1245,8 +1326,44 @@ static const ds_json_t * json_object_geta (const ds_json_t *obj, char **path)
    return NULL;
 }
 
-const ds_json_t *ds_json_object_geta (const ds_json_t *obj, char **path)
+const ds_json_t *ds_json_object_geta (const ds_json_t *obj, const char **path)
 {
    return json_object_geta (obj, path);
+}
+
+const ds_json_t *ds_json_object_getv (const ds_json_t *obj, const char *p1, va_list ap)
+{
+   va_list copy ;
+   va_copy (copy, ap);
+   size_t nparams = 1;
+   const char *tmp = p1;
+   while (tmp) {
+      nparams++;
+      tmp = va_arg (copy, const char *);
+   }
+   va_end (copy);
+
+   const char **params = calloc (nparams + 1, sizeof *params);
+   if (!params)
+      return NULL;
+
+   size_t index = 0;
+   while (p1) {
+      params[index++] = p1;
+      p1 = va_arg (ap, const char *);
+   }
+
+   const ds_json_t *ret = json_object_geta (obj, params);
+   free (params);
+   return ret;
+}
+
+const ds_json_t *ds_json_object_get (const ds_json_t *obj, const char *p1, ...)
+{
+   va_list ap;
+   va_start (ap, p1);
+   const ds_json_t *ret = ds_json_object_getv (obj, p1, ap);
+   va_end (ap);
+   return ret;
 }
 
