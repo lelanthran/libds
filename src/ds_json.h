@@ -33,8 +33,8 @@ extern "C" {
    // Create a new JSON object or array, or any other json type
    ds_json_t *ds_json_object_new (void);
    ds_json_t *ds_json_array_new (void);
-   ds_json_t *ds_json_string_new (const char *src);
-   ds_json_t *ds_json_symbol_new (const char *src);
+   ds_json_t *ds_json_string_new (const char *src);   // Fails if src == NULL
+   ds_json_t *ds_json_symbol_new (const char *src);   // Fails if src == NULL
    ds_json_t *ds_json_int_new (int64_t src);
    ds_json_t *ds_json_float_new (double src);
 

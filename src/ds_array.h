@@ -22,6 +22,8 @@ extern "C" {
    void *ds_array_get (const ds_array_t *ll, size_t i);
    void ds_array_iterate (const ds_array_t *ll,
                           void (*fptr) (void *, void *), void *param);
+   void ds_array_iterate_reverse (const ds_array_t *ll,
+                                  void (*fptr) (void *, void *), void *param);
 
    void *ds_array_ins_tail (ds_array_t *ll, void *el);
    void *ds_array_ins_head (ds_array_t *ll, void *el);
@@ -30,6 +32,7 @@ extern "C" {
    void *ds_array_rm_head (ds_array_t *ll);
 
    void *ds_array_rm (ds_array_t *ll, size_t index);
+   void *ds_array_rm_ptr (ds_array_t *ll, const void *ptr);
 
    void ds_array_shrink_to_fit (ds_array_t *ll);
 

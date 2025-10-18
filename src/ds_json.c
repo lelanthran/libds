@@ -140,7 +140,7 @@ void ds_json_del (ds_json_t *json)
          break;
 
       case ds_json_ARRAY:
-         ds_array_iterate (json->value._array, fake_json_del, NULL);
+         ds_array_iterate_reverse (json->value._array, fake_json_del, NULL);
          ds_array_del (json->value._array);
          break;
 
@@ -163,7 +163,7 @@ void ds_json_del (ds_json_t *json)
          break;
    }
    // Free the msgs
-   ds_array_iterate (json->msgs, fake_free, NULL);
+   ds_array_iterate_reverse (json->msgs, fake_free, NULL);
    ds_array_del (json->msgs);
 
    // Finally, free the object
@@ -661,7 +661,6 @@ static ds_json_t *json_read_object (void *handle,
          ds_json_del (value);
          goto cleanup;
       }
-      printf ("Read field [%s]\n", name);
       free (name); name = NULL;
       terminator = read_char (READ_PARAMS);
 #undef READ_PARAMS
@@ -942,11 +941,11 @@ ds_json_t *ds_json_array_new (void)
    return json_new_array ();
 }
 
-ds_json_t *ds_json_string_new (const char *src)
+static ds_json_t *string_new (const char *src, enum ds_json_object_type_t type)
 {
    ds_json_t *ret = calloc (1, sizeof *ret);
    if (ret) {
-      ret->type = ds_json_STRING;
+      ret->type = type;
       if (!(ret->value._string = ds_str_dup (src))) {
          free (ret);
          ret = NULL;
@@ -956,18 +955,14 @@ ds_json_t *ds_json_string_new (const char *src)
    return ret;
 }
 
+ds_json_t *ds_json_string_new (const char *src)
+{
+   return string_new (src, ds_json_STRING);
+}
+
 ds_json_t *ds_json_symbol_new (const char *src)
 {
-   ds_json_t *ret = calloc (1, sizeof *ret);
-   if (ret) {
-      ret->type = ds_json_SYMBOL;
-      if (!(ret->value._string = ds_str_dup (src))) {
-         free (ret);
-         ret = NULL;
-      }
-   }
-
-   return ret;
+   return string_new (src, ds_json_SYMBOL);
 }
 
 ds_json_t *ds_json_int_new (int64_t src)
@@ -1001,7 +996,7 @@ const char *ds_json_symbol_value (const ds_json_t *json)
 int64_t ds_json_int_value (const ds_json_t *json)
 {
    if (!json || json->type != ds_json_NUMBER ||
-       json->value._number.minor_digits[0] || json->value._number.exp_digits)
+       json->value._number.minor_digits[0] || json->value._number.exp_digits[0])
       return INT64_MAX;
    int64_t ret = 0;
    if ((sscanf (json->value._number.major_digits, "%" PRIi64, &ret)) != 1)
@@ -1077,7 +1072,7 @@ void ds_json_messages_clear (void)
    if (!g_messages)
       return;
 
-   ds_array_iterate (g_messages, fake_free, NULL);
+   ds_array_iterate_reverse (g_messages, fake_free, NULL);
    ds_array_del (g_messages);
    g_messages = NULL;
 }
@@ -1142,7 +1137,7 @@ void stringify_array (const ds_json_t *json, struct stringify_t *sobj)
 void stringify_string (const ds_json_t *json, struct stringify_t *sobj)
 {
    size_t slen = strlen (json->value._string);
-   char *tmp = malloc (2 * slen); // Worst case scenario, all characters are escaped
+   char *tmp = malloc ((2 * slen) + 1); // Worst case scenario, all characters are escaped
    if (!tmp) {
       // ERROR
       return;
