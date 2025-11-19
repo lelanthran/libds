@@ -1,6 +1,7 @@
 # v1.0.8 -
 
 Features
+1. Adds `ds_kvstore` module for storing non-duplicate key/value pairs.
 
 Bugfixes
 1. `ds_str_printf` will free the `dst` if it is not-null.
