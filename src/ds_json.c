@@ -207,7 +207,7 @@ static const char *messagev (const char *srcfile, int srcline,
    char *ret = NULL;
    char *prefix = NULL;
    char *msg = NULL;
-   uint64_t now = time(NULL);
+   uint64_t now = (uint64_t)time(NULL);
 
    if ((ds_str_printf (&prefix, "%"PRIu64":%s:%i:%s:%s:%zu:%zu:",
                                 now, srcfile, srcline, type, fname, line, cpos)) == 0)

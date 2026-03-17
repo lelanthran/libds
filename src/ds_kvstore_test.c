@@ -52,7 +52,7 @@ int main (void)
          goto cleanup;
       }
 
-      if (inputs[i].v && !v && (strcmp (v, inputs[i].v)) != 0) {
+      if (inputs[i].v && v && (strcmp (v, inputs[i].v)) != 0) {
          printf ("Incorrect value stored [%s:%s]\n", inputs[i].k, inputs[i].v);
          goto cleanup;
       }
@@ -100,7 +100,7 @@ int main (void)
          goto cleanup;
       }
 
-      if (inputs[i].o && !v && (strcmp (v, inputs[i].o)) != 0) {
+      if (inputs[i].o && v && (strcmp (v, inputs[i].o)) != 0) {
          printf ("Incorrect value stored [%s:%s]\n", inputs[i].k, inputs[i].o);
          goto cleanup;
       }

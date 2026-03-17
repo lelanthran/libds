@@ -42,7 +42,7 @@ static char *fslurp (const char *fname)
       goto cleanup;
    }
 
-   fsize = tmp;
+   fsize = (size_t)tmp;
 
    if ((fseek (inf, 0, SEEK_SET)) != 0) {
       EPRINTF ("[%s]: Failed to seek_set: %m\n", fname);
