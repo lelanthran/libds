@@ -910,7 +910,8 @@ ds_json_t *ds_json_parse_string (const char *name, const char *src)
 
 ds_json_t *ds_json_parse_stream (const char *name, FILE *infile)
 {
-   return json_parse (name, infile, NULL,
+   uint64_t c = 0;
+   return json_parse (name, infile, &c,
                       (parser_getchar_t *)parser_stream_getchar,
                       (parser_ungetchar_t *)parser_stream_ungetchar);
 }
