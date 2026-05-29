@@ -423,7 +423,68 @@ static char *read_digits (void *handle, void *extra,
    return ret;
 }
 
+static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
+                         const char *fname, size_t *line, size_t *cpos,
+                         parser_getchar_t *fptr_getc,
+                         parser_getchar_t *fptr_ungetc)
+{
+   memset (dst, 0, sizeof *dst);
+   swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
 
+#define PARAMETERS   handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc
+#define TERMINATOR(x)   \
+   (!(isdigit(x)) && x != 'e' && x != '.' && x != '-' && x != '+')
+
+
+   // Read optional sign
+   dst->sign = read_char (PARAMETERS);
+   if (dst->sign != '-') {
+      fptr_ungetc (handle, extra, line, cpos);
+      dst->sign = 0;
+   }
+
+   // Read mandatory major digits
+   if (!(dst->major_digits = read_digits (PARAMETERS)))
+      return false;
+
+   int tmp = read_char (PARAMETERS);
+
+   if (TERMINATOR (tmp)) {
+      fptr_ungetc (handle, extra, line, cpos);
+      return true;
+   }
+
+   // Read optional period + minor digits
+   if (tmp == '.') {
+      if (!(dst->minor_digits = read_digits (PARAMETERS))) {
+         return false;
+      }
+      tmp = read_char (PARAMETERS);
+      if (TERMINATOR (tmp)) {
+         fptr_ungetc (handle, extra, line, cpos);
+         return true;
+      }
+   }
+
+   // Read optional exp
+   if (tmp == 'E' || tmp == 'e') {
+      // Read optional exp_sign
+      dst->exp_sign = read_char (PARAMETERS);
+      if (dst->exp_sign != '+' && dst->exp_sign != '-') {
+         dst->exp_sign = 0;
+         fptr_ungetc (handle, extra, line, cpos);
+      }
+      // Read exp_digits
+      if (!(dst->exp_digits = read_digits (PARAMETERS)))
+         return false;
+   }
+
+   return true;
+#undef PARAMETERS
+#undef TERMINATOR
+}
+
+#if 0
 static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
                          const char *fname, size_t *line, size_t *cpos,
                          parser_getchar_t *fptr_getc,
@@ -443,8 +504,10 @@ static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
       }
       if (!(dst->major_digits = ds_str_dup ("0")))
          return false;
-      fptr_ungetc (handle, extra, line, cpos);
-      return true;
+      if (tmp != '.') {
+         fptr_ungetc (handle, extra, line, cpos);
+         return true;
+      }
    }
 
    fptr_ungetc (handle, extra, line, cpos);
@@ -491,6 +554,7 @@ static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
 
    return true;
 }
+#endif
 
 
 static char *read_string (void *handle,

@@ -217,6 +217,9 @@ cleanup:
       nmessages++;
    }
    printf ("Messages: %zu\n", nmessages);
+   if (nmessages)
+      ret = EXIT_FAILURE;
+
    for (size_t i=0; messages && messages[i]; i++) {
       printf ("[%zu]: %s\n", i, messages[i]);
       free (messages[i]);
