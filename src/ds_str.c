@@ -152,13 +152,17 @@ size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap)
    char *tmp = NULL;
    va_list ac;
 
-   *dst = NULL;
+   if (*dst) {
+      free (*dst);
+      *dst = NULL;
+   }
+
 
    va_copy (ac, ap);
    int rc = vsnprintf (*dst, ret, fmt, ac);
    va_end (ac);
 
-   ret = rc + 1;
+   ret = (size_t)rc + 1;
 
    if (!(tmp = realloc (*dst, ret))) {
       return 0;
@@ -166,7 +170,7 @@ size_t ds_str_vprintf (char **dst, const char *fmt, va_list ap)
 
    *dst = tmp;
    rc = vsnprintf (*dst, ret, fmt, ap);
-   tmprc = rc;
+   tmprc = (size_t)rc;
    if (tmprc >= ret) {
       free (*dst);
       *dst = NULL;

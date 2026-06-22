@@ -76,8 +76,8 @@ int main (void)
 
    /* ******************************************************************* */
 
-   float tmpflt = 10.0 / 3.0;
-   if (!(ds_str_printf (&test_printf, "[%s], %zu, %f, [%s]\n",
+   double tmpflt = 10.0 / 3.0;
+   if (!(ds_str_printf (&test_printf, "[%s], %zu, %lf, [%s]\n",
                            "START", (size_t)-1, tmpflt, "END"))) {
       fprintf (stderr, "printf: Failed\n");
       goto errorexit;
@@ -207,8 +207,8 @@ int main (void)
       goto errorexit;
    }
 
-   double append_end_time = (tp_end.tv_sec + (tp_end.tv_nsec/1000000000.0));
-   double append_start_time = (tp_start.tv_sec + (tp_start.tv_nsec/1000000000.0));
+   double append_end_time = ((double)(tp_end.tv_sec) + ((double)tp_end.tv_nsec/1000000000.0));
+   double append_start_time = ((double)(tp_start.tv_sec) + ((double)tp_start.tv_nsec/1000000000.0));
    double append_elapsed_time = append_end_time - append_start_time;
 
    rc = clock_gettime (CLOCK_REALTIME, &tp_start);
@@ -241,8 +241,8 @@ int main (void)
       goto errorexit;
    }
 
-   double cat_end_time = (tp_end.tv_sec + (tp_end.tv_nsec/1000000000.0));
-   double cat_start_time = (tp_start.tv_sec + (tp_start.tv_nsec/1000000000.0));
+   double cat_end_time = ((double)(tp_end.tv_sec) + ((double)tp_end.tv_nsec/1000000000.0));
+   double cat_start_time = ((double)(tp_start.tv_sec) + ((double)tp_start.tv_nsec/1000000000.0));
    double cat_elapsed_time = cat_end_time - cat_start_time;
 
    printf ("Elapsed time for large string append: %lf\n", append_elapsed_time);

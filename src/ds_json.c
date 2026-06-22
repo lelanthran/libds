@@ -1,8 +1,10 @@
 #include <stdarg.h>
 #include <time.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <inttypes.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "ds_json.h"
 #include "ds_array.h"
@@ -138,7 +140,7 @@ void ds_json_del (ds_json_t *json)
          break;
 
       case ds_json_ARRAY:
-         ds_array_iterate (json->value._array, fake_json_del, NULL);
+         ds_array_iterate_reverse (json->value._array, fake_json_del, NULL);
          ds_array_del (json->value._array);
          break;
 
@@ -161,7 +163,7 @@ void ds_json_del (ds_json_t *json)
          break;
    }
    // Free the msgs
-   ds_array_iterate (json->msgs, fake_free, NULL);
+   ds_array_iterate_reverse (json->msgs, fake_free, NULL);
    ds_array_del (json->msgs);
 
    // Finally, free the object
@@ -205,7 +207,7 @@ static const char *messagev (const char *srcfile, int srcline,
    char *ret = NULL;
    char *prefix = NULL;
    char *msg = NULL;
-   uint64_t now = time(NULL);
+   uint64_t now = (uint64_t)time(NULL);
 
    if ((ds_str_printf (&prefix, "%"PRIu64":%s:%i:%s:%s:%zu:%zu:",
                                 now, srcfile, srcline, type, fname, line, cpos)) == 0)
@@ -239,7 +241,7 @@ cleanup:
 }
 
 static const char *message (const char *srcfile, int srcline, const char *type, const char *fname,
-                             size_t line, size_t cpos,
+                            size_t line, size_t cpos,
                             const char *fmts,
                             ...)
 {
@@ -421,7 +423,68 @@ static char *read_digits (void *handle, void *extra,
    return ret;
 }
 
+static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
+                         const char *fname, size_t *line, size_t *cpos,
+                         parser_getchar_t *fptr_getc,
+                         parser_getchar_t *fptr_ungetc)
+{
+   memset (dst, 0, sizeof *dst);
+   swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
 
+#define PARAMETERS   handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc
+#define TERMINATOR(x)   \
+   (!(isdigit(x)) && x != 'e' && x != '.' && x != '-' && x != '+')
+
+
+   // Read optional sign
+   dst->sign = read_char (PARAMETERS);
+   if (dst->sign != '-') {
+      fptr_ungetc (handle, extra, line, cpos);
+      dst->sign = 0;
+   }
+
+   // Read mandatory major digits
+   if (!(dst->major_digits = read_digits (PARAMETERS)))
+      return false;
+
+   int tmp = read_char (PARAMETERS);
+
+   if (TERMINATOR (tmp)) {
+      fptr_ungetc (handle, extra, line, cpos);
+      return true;
+   }
+
+   // Read optional period + minor digits
+   if (tmp == '.') {
+      if (!(dst->minor_digits = read_digits (PARAMETERS))) {
+         return false;
+      }
+      tmp = read_char (PARAMETERS);
+      if (TERMINATOR (tmp)) {
+         fptr_ungetc (handle, extra, line, cpos);
+         return true;
+      }
+   }
+
+   // Read optional exp
+   if (tmp == 'E' || tmp == 'e') {
+      // Read optional exp_sign
+      dst->exp_sign = read_char (PARAMETERS);
+      if (dst->exp_sign != '+' && dst->exp_sign != '-') {
+         dst->exp_sign = 0;
+         fptr_ungetc (handle, extra, line, cpos);
+      }
+      // Read exp_digits
+      if (!(dst->exp_digits = read_digits (PARAMETERS)))
+         return false;
+   }
+
+   return true;
+#undef PARAMETERS
+#undef TERMINATOR
+}
+
+#if 0
 static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
                          const char *fname, size_t *line, size_t *cpos,
                          parser_getchar_t *fptr_getc,
@@ -441,8 +504,10 @@ static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
       }
       if (!(dst->major_digits = ds_str_dup ("0")))
          return false;
-      fptr_ungetc (handle, extra, line, cpos);
-      return true;
+      if (tmp != '.') {
+         fptr_ungetc (handle, extra, line, cpos);
+         return true;
+      }
    }
 
    fptr_ungetc (handle, extra, line, cpos);
@@ -489,6 +554,7 @@ static bool read_number (ds_json_number_t *dst, void *handle, void *extra,
 
    return true;
 }
+#endif
 
 
 static char *read_string (void *handle,
@@ -506,6 +572,11 @@ static char *read_string (void *handle,
    int c = fptr_getc (handle, extra, line, cpos);
    if (c != '"')
       return NULL;
+   c = fptr_getc (handle, extra, line, cpos);
+   if (c == '"') { // Empty string
+      return ds_str_dup ("");
+   }
+   fptr_ungetc (handle, extra, line, cpos);
 
    char *ret = NULL;
 
@@ -618,17 +689,24 @@ static ds_json_t *json_read_object (void *handle,
    ds_json_t *value = NULL;
    char terminator = 0;
 
+   if (!(ret = json_new_object())) {
+      ERROR(fname, *line, *cpos, "OOM error");
+      goto cleanup;
+   }
+
    swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
    int c = fptr_getc (handle, extra, line, cpos);
    if (c != '{') {
       ERROR(fname, *line, *cpos, "Expected '{', found '%c'\n", c);
       goto cleanup;
    }
-
-   if (!(ret = json_new_object())) {
-      ERROR(fname, *line, *cpos, "OOM error");
+   swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
+   c = fptr_getc (handle, extra, line, cpos);
+   if (c == '}') { // Empty object
+      error = false;
       goto cleanup;
    }
+   fptr_ungetc (handle, extra, line, cpos);
 
    do {
       free (name);
@@ -647,7 +725,6 @@ static ds_json_t *json_read_object (void *handle,
          ds_json_del (value);
          goto cleanup;
       }
-      printf ("Read field [%s]\n", name);
       free (name); name = NULL;
       terminator = read_char (READ_PARAMS);
 #undef READ_PARAMS
@@ -661,7 +738,8 @@ static ds_json_t *json_read_object (void *handle,
 
    error = false;
 cleanup:
-   ret->error = error;
+   if (ret)
+      ret->error = error;
    free (name);
    return ret;
 }
@@ -685,6 +763,13 @@ static ds_json_t *json_read_array (void *handle,
       ERROR(fname, *line, *cpos, "Expected '[', got '%c'\n", c);
       goto cleanup;
    }
+   swallow_ws (handle, extra, fname, line, cpos, fptr_getc, fptr_ungetc);
+   c = fptr_getc (handle, extra, line, cpos);
+   if (c == ']') { // Empty array
+      error = false;
+      goto cleanup;
+   }
+   fptr_ungetc (handle, extra, line, cpos);
 
    char terminator = 0;
    do {
@@ -765,6 +850,7 @@ static ds_json_t *json_read_number (void *handle,
                                     parser_getchar_t *fptr_ungetc)
 {
    ds_json_number_t number;
+   memset (&number, 0, sizeof number);
    bool error = read_number (&number, handle, extra, fname, line, cpos,
                              fptr_getc, fptr_ungetc);
    ds_json_t *ret = json_new_number (number.sign,
@@ -858,17 +944,17 @@ static int parser_string_ungetchar (const char *src, size_t *index,
 }
 
 
-static int parser_stream_getchar (FILE *infile, char *saved, size_t *line, size_t *cpos)
+static int parser_stream_getchar (FILE *infile, int *saved, size_t *line, size_t *cpos)
 {
    // TODO: Redo these.
    (void)line;
    (void)cpos;
    int ret = fgetc (infile);
-   *saved = (char)ret;
+   *saved = ret;
    return ret;
 }
 
-static int parser_stream_ungetchar (FILE *infile, char *saved, size_t *line, size_t *cpos)
+static int parser_stream_ungetchar (FILE *infile, int *saved, size_t *line, size_t *cpos)
 {
    // TODO: Redo these.
    (void)line;
@@ -888,10 +974,143 @@ ds_json_t *ds_json_parse_string (const char *name, const char *src)
 
 ds_json_t *ds_json_parse_stream (const char *name, FILE *infile)
 {
-   return json_parse (name, infile, NULL,
+   int c = 0;
+   return json_parse (name, infile, &c,
                       (parser_getchar_t *)parser_stream_getchar,
                       (parser_ungetchar_t *)parser_stream_ungetchar);
 }
+
+ds_json_t *ds_json_parse_value (const char *value)
+{
+   size_t line = 0, cpos = 0;
+   size_t index = 0;
+   char *src = ds_str_dup (value);
+   if (!src)
+      return NULL;
+
+   ds_json_t *ret = json_read_value ((void *)src, &index, "ignore",
+                                     &line, &cpos,
+                                     (parser_getchar_t *)parser_string_getchar,
+                                     (parser_ungetchar_t *)parser_string_ungetchar);
+   free (src);
+   return ret;
+}
+
+ds_json_t *ds_json_object_new (void)
+{
+   return json_new_object ();
+}
+
+ds_json_t *ds_json_array_new (void)
+{
+   return json_new_array ();
+}
+
+static ds_json_t *string_new (const char *src, enum ds_json_object_type_t type)
+{
+   ds_json_t *ret = calloc (1, sizeof *ret);
+   if (ret) {
+      ret->type = type;
+      if (!(ret->value._string = ds_str_dup (src))) {
+         free (ret);
+         ret = NULL;
+      }
+   }
+
+   return ret;
+}
+
+ds_json_t *ds_json_string_new (const char *src)
+{
+   return string_new (src, ds_json_STRING);
+}
+
+ds_json_t *ds_json_symbol_new (const char *src)
+{
+   return string_new (src, ds_json_SYMBOL);
+}
+
+ds_json_t *ds_json_int_new (int64_t src)
+{
+   char tmp[50];
+   snprintf (tmp, sizeof tmp, "%" PRIi64, src);
+   return ds_json_parse_value (tmp);
+}
+
+ds_json_t *ds_json_float_new (double src)
+{
+   char tmp[50];
+   snprintf (tmp, sizeof tmp, "%g", src);
+   return ds_json_parse_value (tmp);
+}
+
+const char *ds_json_string_value (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_STRING)
+      return NULL;
+   return json->value._string;
+}
+
+const char *ds_json_symbol_value (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_SYMBOL)
+      return NULL;
+   return json->value._string;
+}
+
+int64_t ds_json_int_value (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_NUMBER ||
+       json->value._number.minor_digits[0] || json->value._number.exp_digits[0])
+      return INT64_MAX;
+   int64_t ret = 0;
+   if ((sscanf (json->value._number.major_digits, "%" PRIi64, &ret)) != 1)
+      return INT64_MAX;
+   return ret;
+}
+
+double ds_json_float_value (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_NUMBER)
+      return (double)NAN;
+
+   char tmp[100];
+   char sign[2] = { json->value._number.sign, 0 };
+   char exp_sign[2] = { json->value._number.exp_sign, 0 };
+   snprintf (tmp, sizeof tmp, "%s%s.%se%s%s",
+             sign,
+             json->value._number.major_digits,
+             json->value._number.minor_digits,
+             exp_sign,
+             json->value._number.exp_digits);
+
+   double ret = 0;
+   if ((sscanf (tmp, "%lf", &ret)) != 1)
+      return (double)NAN;
+
+   return ret;
+}
+
+
+bool ds_json_object_append (ds_json_t *obj, const char *name, ds_json_t *value)
+{
+   if (obj->type != ds_json_OBJECT)
+      return false;
+
+   if (!(ds_hmap_set_str_ptr (obj->value._kvpairs, name, value)))
+      return false;
+
+   return true;
+}
+
+bool ds_json_array_append (ds_json_t *obj, ds_json_t *value)
+{
+   if (obj->type != ds_json_ARRAY)
+      return false;
+
+   return ds_array_ins_tail (obj->value._array, value) != NULL;
+}
+
 
 
 char **ds_json_messages_get (void)
@@ -918,7 +1137,7 @@ void ds_json_messages_clear (void)
    if (!g_messages)
       return;
 
-   ds_array_iterate (g_messages, fake_free, NULL);
+   ds_array_iterate_reverse (g_messages, fake_free, NULL);
    ds_array_del (g_messages);
    g_messages = NULL;
 }
@@ -983,7 +1202,7 @@ void stringify_array (const ds_json_t *json, struct stringify_t *sobj)
 void stringify_string (const ds_json_t *json, struct stringify_t *sobj)
 {
    size_t slen = strlen (json->value._string);
-   char *tmp = malloc (2 * slen); // Worst case scenario, all characters are escaped
+   char *tmp = malloc ((2 * slen) + 1); // Worst case scenario, all characters are escaped
    if (!tmp) {
       // ERROR
       return;
@@ -1049,6 +1268,10 @@ cleanup:
    return;
 }
 
+static void stringify_message (struct stringify_t *sobj, const char *message)
+{
+   ds_str_append (&sobj->output, message, NULL);
+}
 
 static void stringify (const ds_json_t *json, struct stringify_t *sobj)
 {
@@ -1056,12 +1279,12 @@ static void stringify (const ds_json_t *json, struct stringify_t *sobj)
       return;
 
    switch (json->type) {
-      case ds_json_UNKNOWN: ds_str_dup ("ERROR");           break;
-      case ds_json_OBJECT:  stringify_object (json, sobj);  break;
-      case ds_json_ARRAY:   stringify_array (json, sobj);   break;
-      case ds_json_STRING:  stringify_string (json, sobj);  break;
-      case ds_json_SYMBOL:  stringify_symbol (json, sobj);  break;
-      case ds_json_NUMBER:  stringify_number (json, sobj);  break;
+      case ds_json_UNKNOWN: stringify_message   (sobj, "ERROR"); break;
+      case ds_json_OBJECT:  stringify_object    (json, sobj);    break;
+      case ds_json_ARRAY:   stringify_array     (json, sobj);    break;
+      case ds_json_STRING:  stringify_string    (json, sobj);    break;
+      case ds_json_SYMBOL:  stringify_symbol    (json, sobj);    break;
+      case ds_json_NUMBER:  stringify_number    (json, sobj);    break;
    }
 
 }
@@ -1099,7 +1322,7 @@ char **ds_json_fieldnames (const ds_json_t *json)
    return ret;
 }
 
-ds_json_t *ds_json_get_index (const ds_json_t *json, size_t index)
+ds_json_t *ds_json_array_get (const ds_json_t *json, size_t index)
 {
    if (!json || json->type != ds_json_ARRAY)
       return NULL;
@@ -1107,7 +1330,15 @@ ds_json_t *ds_json_get_index (const ds_json_t *json, size_t index)
    return ds_array_get (json->value._array, index);
 }
 
-static const ds_json_t * json_geta (const ds_json_t *obj, char **path)
+size_t ds_json_array_length (const ds_json_t *json)
+{
+   if (!json || json->type != ds_json_ARRAY)
+      return 0;
+
+   return ds_array_length (json->value._array);
+}
+
+static const ds_json_t * json_object_geta (const ds_json_t *obj, const char **path)
 {
    char **names = NULL;
 
@@ -1141,9 +1372,9 @@ static const ds_json_t * json_geta (const ds_json_t *obj, char **path)
          ds_hmap_get_str_ptr (obj->value._kvpairs, names[i], (void **)&found);
          free (names);
          if (arr_index != (size_t)-1) {
-            return json_geta (ds_json_get_index (found, arr_index), &path[1]);
+            return json_object_geta (ds_json_array_get (found, arr_index), &path[1]);
          } else {
-            return json_geta (found, &path[1]);
+            return json_object_geta (found, &path[1]);
          }
       }
       if (arr_start) {
@@ -1155,8 +1386,44 @@ static const ds_json_t * json_geta (const ds_json_t *obj, char **path)
    return NULL;
 }
 
-const ds_json_t *ds_json_geta (const ds_json_t *obj, char **path)
+const ds_json_t *ds_json_object_geta (const ds_json_t *obj, const char **path)
 {
-   return json_geta (obj, path);
+   return json_object_geta (obj, path);
+}
+
+const ds_json_t *ds_json_object_getv (const ds_json_t *obj, const char *p1, va_list ap)
+{
+   va_list copy ;
+   va_copy (copy, ap);
+   size_t nparams = 1;
+   const char *tmp = p1;
+   while (tmp) {
+      nparams++;
+      tmp = va_arg (copy, const char *);
+   }
+   va_end (copy);
+
+   const char **params = calloc (nparams + 1, sizeof *params);
+   if (!params)
+      return NULL;
+
+   size_t index = 0;
+   while (p1) {
+      params[index++] = p1;
+      p1 = va_arg (ap, const char *);
+   }
+
+   const ds_json_t *ret = json_object_geta (obj, params);
+   free (params);
+   return ret;
+}
+
+const ds_json_t *ds_json_object_get (const ds_json_t *obj, const char *p1, ...)
+{
+   va_list ap;
+   va_start (ap, p1);
+   const ds_json_t *ret = ds_json_object_getv (obj, p1, ap);
+   va_end (ap);
+   return ret;
 }
 

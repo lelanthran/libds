@@ -1,0 +1,148 @@
+src/ds_json_test.c:41 [./tests]: Failed to determine file size (got 9223372036854775807 bytes): Success
+src/ds_json_test.c:67 [./tests]: Fatal errors encountered, returning failure to caller.
+src/ds_json_test.c:31 [./does-not-exist]: Failed to open file for reading: No such file or directory
+src/ds_json_test.c:67 [./does-not-exist]: Fatal errors encountered, returning failure to caller.
+src/ds_json_test.c:31 [/root/.bash_history]: Failed to open file for reading: Permission denied
+src/ds_json_test.c:67 [/root/.bash_history]: Fatal errors encountered, returning failure to caller.
+====
+{
+   "empty-object-1":   {},
+   "empty-array-1":    [],
+   "empty-object-2":   { },
+   "empty-array-2":    [ ],
+   "empty-object-3":   {      },
+   "empty-array-3":    [      ],
+   "empty-string":   "",
+   "strings": {
+      "string-1": "Hello from\ncaf\u00e9",
+      "string-2": "Hello\r\"World\" with embedded \\ in the string",
+      "string-3": ""
+   },
+   "numbers": {
+      "number-1": 123,
+      "number-2": 123.456,
+      "number-3": 0,
+      "number-4": -0,
+      "number-5": 12e-34,
+      "number-6": 12e+34,
+      "number-7": 12.34e56,
+      "number-8": -12.34e56
+   },
+   "symbols": {
+      "TRUE":  true,
+      "FALSE": false,
+      "NULL":  null
+   },
+   "arrays": {
+      "empty":       [],
+      "simple":      ["a", null, 123.456e78, false],
+      "composite":   [
+         {  "obj-0": [ "value-0.1", "value-0.2" ] },
+         {  "obj-1": "value-1" },
+         {  "obj-2": "value-2" }
+      ]
+   }
+}
+
+====
+[./tests/ds_json/happy-path.json]: 917 bytes
+[fslurp] Passed
+Read field [empty-object-1]
+Read field [empty-array-1]
+Read field [empty-object-2]
+Read field [empty-array-2]
+Read field [empty-object-3]
+Read field [empty-array-3]
+Read field [empty-string]
+Read field [string-1]
+Read field [string-2]
+Read field [string-3]
+Read field [strings]
+Read field [number-1]
+Read field [number-2]
+Read field [number-3]
+Read field [number-4]
+Read field [number-5]
+Read field [number-6]
+Read field [number-7]
+Read field [number-8]
+Read field [numbers]
+Read field [TRUE]
+Read field [FALSE]
+Read field [NULL]
+Read field [symbols]
+Read field [empty]
+Read field [simple]
+Read field [obj-0]
+Read field [obj-1]
+Read field [obj-2]
+Read field [composite]
+Read field [arrays]
+========
+{
+   "strings": {
+      "string-2": "Hello\r\"World\" with embedded \\ in the string",
+      "string-3": "",
+      "string-1": "Hello from\ncafé"
+   },
+   "empty-array-2": [  ],
+   "empty-string": "",
+   "numbers": {
+      "number-8": -12.34e+56,
+      "number-6": 12e+34,
+      "number-4": -0,
+      "number-2": 123.456,
+      "number-5": 12e-34,
+      "number-7": 12.34e+56,
+      "number-1": 123,
+      "number-3": 0
+   },
+   "empty-object-2": {
+
+   },
+   "empty-object-1": {
+
+   },
+   "empty-array-1": [  ],
+   "empty-object-3": {
+
+   },
+   "arrays": {
+      "empty": [  ],
+      "simple": [ "a", null, 123.456e+78, false ],
+      "composite": [ {
+            "obj-0": [ "value-0.1", "value-0.2" ]
+         }, {
+            "obj-1": "value-1"
+         }, {
+            "obj-2": "value-2"
+         } ]
+   },
+   "symbols": {
+      "FALSE": false,
+      "TRUE": true,
+      "NULL": null
+   },
+   "empty-array-3": [  ]
+}
+=========
+[numbers/number-1] => 123
+[symbols] => {
+   "FALSE": false,
+   "TRUE": true,
+   "NULL": null
+}
+[arrays/simple[2]] => 123.456e+78
+[arrays/composite[0]/obj-0] => [ "value-0.1", "value-0.2" ]
+Messages: 0
+[json_string] Passed
+testobj: {
+   "four": [ 1, "two", 3.4, true, false ],
+   "three": 3.33,
+   "one": one,
+   "two": 2,
+   "five": true
+}
+testarr: [ one, 2, 3.33, false, [ 1, "two", 3.4, true, false ], true ]
+Messages: 0
+[json_create] Passed

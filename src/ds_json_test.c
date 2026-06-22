@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "ds_json.h"
 #include "ds_str.h"
@@ -36,13 +37,12 @@ static char *fslurp (const char *fname)
    }
 
    long tmp = ftell (inf);
-   printf ("0xffff = %u\n", 0xffff);
    if (tmp < 0 || tmp > 0xffff) {
       EPRINTF ("[%s]: Failed to determine file size (got %li bytes): %m\n", fname, tmp);
       goto cleanup;
    }
 
-   fsize = tmp;
+   fsize = (size_t)tmp;
 
    if ((fseek (inf, 0, SEEK_SET)) != 0) {
       EPRINTF ("[%s]: Failed to seek_set: %m\n", fname);
@@ -113,10 +113,10 @@ cleanup:
    return ret;
 }
 
-static char **str_split (const char *src, char delim)
+static const char **str_split (const char *src, char delim)
 {
    size_t nitems = 1;
-   char **ret = NULL;
+   const char **ret = NULL;
    char *start = NULL, *end = NULL;
    char *tmp = ds_str_dup (src);
    if (!tmp) {
@@ -187,7 +187,7 @@ int test_json_string (void)
       goto cleanup;
    }
 
-   if (!(obj = ds_json_parse_string ("test-string", test_string))) {
+   if (!(obj = ds_json_parse_string (FNAME_HAPPY_PATH, test_string))) {
       EPRINTF ("Failed to parse string from [%s]\n", FNAME_HAPPY_PATH);
       goto cleanup;
    }
@@ -198,12 +198,12 @@ int test_json_string (void)
    printf ("========\n%s\n=========\n", output);
 
    for (size_t i=0; i<nspaths; i++) {
-      char **path = str_split (spaths[i], '/');
-      const ds_json_t *target = ds_json_geta (obj, path);
+      const char **path = str_split (spaths[i], '/');
+      const ds_json_t *target = ds_json_object_geta (obj, path);
       char *tmp = ds_json_stringify (target);
       printf ("[%s] => %s\n", spaths[i], tmp);
       free (tmp);
-      str_array_free (&path);
+      str_array_free ((char ***)&path);
    }
 
    ret = EXIT_SUCCESS;
@@ -217,6 +217,9 @@ cleanup:
       nmessages++;
    }
    printf ("Messages: %zu\n", nmessages);
+   if (nmessages)
+      ret = EXIT_FAILURE;
+
    for (size_t i=0; messages && messages[i]; i++) {
       printf ("[%zu]: %s\n", i, messages[i]);
       free (messages[i]);
@@ -225,6 +228,87 @@ cleanup:
    ds_json_messages_clear ();
 
    ds_json_del (obj);
+   return ret;
+}
+
+int test_create (void)
+{
+   static struct {
+      const char *name;
+      const char *value;
+   } test1[] = {
+      { "one",      "one (string)"                       },
+      { "two",      "2"                                  },
+      { "three",    "3.33"                               },
+      { "four",     "[ 1, \"two\", 3.4, true, false ]"   },
+      { "five",     "true"                               },
+   };
+   static const size_t ntest1 = sizeof test1 / sizeof test1[0];
+
+   static const char *test2[] = {
+      "one (string)",
+      "2",
+      "3.33",
+      "false",
+      "[ 1, \"two\", 3.4, true, false ]",
+      "true",
+   };
+   static const size_t ntest2 = sizeof test2 / sizeof test2[0];
+
+   int ret = EXIT_FAILURE;
+   ds_json_t *testobj = NULL;
+   ds_json_t *testarr = NULL;
+   char *obj_str = NULL;
+   char *arr_str = NULL;
+
+   if (!(testobj = ds_json_object_new ()) || !(testarr = ds_json_array_new ())) {
+      printf ("Failed to construct JSON objects obj/arr: %p/%p\n", testobj, testarr);
+      goto cleanup;
+   }
+
+   for (size_t i=0; i<ntest1; i++) {
+      const char *n = test1[i].name;
+      const char *v = test1[i].value;
+      if (!(ds_json_object_append (testobj, n, ds_json_parse_value (v)))) {
+         printf ("Failed to construct object `%s:%s`\n", n, v);
+         goto cleanup;
+      }
+   }
+
+   for (size_t i=0; i<ntest2; i++) {
+      if (!(ds_json_array_append (testarr, ds_json_parse_value (test2[i])))) {
+         printf ("Failed to add field [%s] to array\n", test2[i]);
+         goto cleanup;
+      }
+   }
+
+   if (!(obj_str = ds_json_stringify (testobj)) || !(arr_str = ds_json_stringify(testarr))) {
+      printf ("Failed to stringify testobj/testarr: %p/%p\n", obj_str, arr_str);
+      goto cleanup;
+   }
+
+   printf ("testobj: %s\n", obj_str);
+   printf ("testarr: %s\n", arr_str);
+
+   ret = EXIT_SUCCESS;
+cleanup:
+   free (obj_str);
+   free (arr_str);
+   ds_json_del (testobj);
+   ds_json_del (testarr);
+
+   char **messages = ds_json_messages_get();
+   size_t nmessages = 0;
+   for (size_t i=0; messages && messages[i]; i++) {
+      nmessages++;
+   }
+   printf ("Messages: %zu\n", nmessages);
+   for (size_t i=0; messages && messages[i]; i++) {
+      printf ("[%zu]: %s\n", i, messages[i]);
+      free (messages[i]);
+   }
+   free (messages);
+   ds_json_messages_clear ();
    return ret;
 }
 
@@ -238,17 +322,20 @@ int main (void)
    } tests[] = {
       { "fslurp",          test_fslurp },
       { "json_string",     test_json_string},
+      { "json_create",     test_create},
    };
 
 
    for (size_t i=0; i<sizeof tests  /sizeof tests[0]; i++) {
       if ((tests[i].fptr ()) != EXIT_SUCCESS) {
          EPRINTF ("[%s] test failure\n", tests[i].name);
+         fflush (stdout);
+         fflush (stderr);
          goto cleanup;
-      } else {
-         printf ("[%s] Passed\n", tests[i].name);
       }
-
+      printf ("[%s] Passed\n", tests[i].name);
+      fflush (stdout);
+      fflush (stderr);
    }
 
    ret = EXIT_SUCCESS;

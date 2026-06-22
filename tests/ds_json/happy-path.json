@@ -1,16 +1,26 @@
 {
+   "empty-object-1":   {},
+   "empty-array-1":    [],
+   "empty-object-2":   { },
+   "empty-array-2":    [ ],
+   "empty-object-3":   {      },
+   "empty-array-3":    [      ],
+   "empty-string":   "",
    "strings": {
       "string-1": "Hello from\ncaf\u00e9",
-      "string-2": "Hello\r\"World\" with embedded \\ in the string"
+      "string-2": "Hello\r\"World\" with embedded \\ in the string",
+      "string-3": ""
    },
    "numbers": {
+      "number-0": 0.5,
       "number-1": 123,
       "number-2": 123.456,
       "number-3": 0,
-      "number-4": 12e-34,
-      "number-5": 12e+34,
-      "number-6": 12.34e56,
-      "number-7": -12.34e56
+      "number-4": -0,
+      "number-5": 12e-34,
+      "number-6": 12e+34,
+      "number-7": 12.34e56,
+      "number-8": -12.34e56
    },
    "symbols": {
       "TRUE":  true,
@@ -18,6 +28,7 @@
       "NULL":  null
    },
    "arrays": {
+      "empty":       [],
       "simple":      ["a", null, 123.456e78, false],
       "composite":   [
          {  "obj-0": [ "value-0.1", "value-0.2" ] },
