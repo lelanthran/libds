@@ -1,3 +1,10 @@
+# v1.0.9 - ???
+
+Features
+1. Adds kv_pair_t datatype for storing a single record of key/value pair.
+
+
+
 # v1.0.8 - Mon Jun 22 22:46:55 2026 +0200
 
 Features
