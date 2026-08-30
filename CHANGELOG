@@ -3,6 +3,7 @@
 Features
 1. Adds kv_pair_t datatype for storing a single record of key/value pair.
 2. Adds a strbuilder_t datatype for building strings.
+3. Adds a cline_t datatype to represent parsed command-line options.
 
 
 
