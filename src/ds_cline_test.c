@@ -22,17 +22,41 @@ static bool test_args (const char *name, int argc, char **argv)
 
   for (size_t i=0; i<=nflags; i++) {
     const ds_kvpair_t *flag = ds_cline_flag_get (cline, i);
-    printf ("[%s]: flag [%zu]: [%s] = [%s]\n",
+    const char *flag_value = ds_cline_flag_value (cline, ds_kvpair_key_get (flag));
+    printf ("[%s]: flag [%zu]: [%s] = [%s] (%s)\n",
             name,
             i,
             flag ? ds_kvpair_key_get (flag) : "(null-key)",
-            flag ? ds_kvpair_value_get (flag) : "(null-value)");
+            flag ? ds_kvpair_value_get (flag) : "(null-value)",
+            flag_value);
+  }
+  if (ds_cline_flag_value (cline, "unrecognised flag")) {
+    printf ("[%s]: expected failure when retrieving flag, got success\n", name);
+    return false;
+  } else {
+    printf ("[%s]: unrecognised flag test passed\n", name);
   }
 
   for (size_t i=0; i<=nargs; i++) {
     const char *arg = ds_cline_arg_get (cline, i);
-    printf ("[%s]: arg [%zu]: [%s]\n", name, i, arg ? arg : "(null-arg)");
+    printf ("[%s]: arg [%zu]: [%s] [%s]\n",
+            name,
+            i,
+            arg ? arg : "(null-arg)",
+            ds_cline_arg_test (cline, arg) ? "found" : "not found");
   }
+  if (ds_cline_arg_test (cline, "unrecognised argument")) {
+    printf ("[%s]: expected failure in testing argument, got success\n", name);
+    return false;
+  } else {
+    printf ("[%s]: unrecognised arg test passed\n", name);
+  }
+
+  const char **dups = ds_cline_flag_values (cline, "flag1");
+  for (size_t i=0; dups && dups[i]; i++) {
+    printf ("[%s]: flag1 dup [%s]\n", name, dups[i]);
+  }
+  free (dups);
 
   for (int i=0; i < argc; i++) {
     free (argv[i]);
@@ -56,6 +80,16 @@ int main (void)
     "prog", "--flag 1=two values", "--no-value", "--", "extra-arg", NULL
   };
 
+  int argc4 = 6;
+  char *argv4[] = {
+    "prog", "--flag1=one",
+            "--flag2=two",
+            "--flag1=three",
+            "--flag3=four",
+            "--flag1=five",
+            NULL
+  };
+
 
   struct {
     const char *name;
@@ -65,6 +99,7 @@ int main (void)
     { "No args",              argc1, argv1 },
     { "arg, flag, arg",       argc2, argv2 },
     { "no-value, no-key",     argc3, argv3 },
+    { "duplicates",           argc4, argv4 },
   };
   static const size_t ntests = sizeof tests / sizeof tests[0];
 

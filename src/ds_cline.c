@@ -122,3 +122,51 @@ const ds_kvpair_t *ds_cline_flag_get (ds_cline_t *cline, size_t i)
   return cline && i < cline->nflags ? cline->flags[i] : NULL;
 }
 
+
+
+
+bool ds_cline_arg_test (const ds_cline_t *cline, const char *arg)
+{
+  if (!cline || !arg)
+       return false;
+
+  for (size_t i=0; i < cline->nargs; i++) {
+    if ((strcmp (cline->args[i], arg)) == 0)
+      return true;
+  }
+  return false;
+}
+
+const char *ds_cline_flag_value (const ds_cline_t *cline, const char *flag)
+{
+  if (!cline || !flag)
+    return NULL;
+
+  for (size_t i=0; i < cline->nflags; i++) {
+    const char *key = ds_kvpair_key_get (cline->flags[i]);
+    if (key && (strcmp (key, flag)) == 0)
+      return ds_kvpair_value_get (cline->flags[i]);
+  }
+  return NULL;
+}
+
+const char **ds_cline_flag_values (ds_cline_t *cline, const char *flag)
+{
+  if (!cline || !flag)
+    return NULL;
+
+  // Allocate enough to store every flag, not just the one specified. We will
+  // use only a subset of this, but that's fine too.
+  printf ("nflags: %zu\n", cline->nflags);
+  const char **ret = calloc (cline->nflags + 1, sizeof *ret);
+  if (!ret)
+    return false;
+
+  size_t idx = 0;
+  for (size_t i=0; i < cline->nflags; i++) {
+    const char *key = ds_kvpair_key_get (cline->flags[i]);
+    if (key && (strcmp (key, flag)) == 0)
+      ret[idx++] = ds_kvpair_value_get (cline->flags[i]);
+  }
+  return ret;
+}
