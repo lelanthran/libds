@@ -48,7 +48,7 @@ extern "C" {
   //    1. Return a list of unrecognised args
   //    2. Return a list of unrecognised flags
   // Returning a list of unrecognised args also takes a position to search
-  // from because it is not unusual to have the first argument be a command
+  // to/from because it is not unusual to have the first argument be a command
   // and the second, third, etc be sub-commands. The position allows each
   // command to determine if the sub-commands are valid for that specific
   // command.
@@ -59,7 +59,8 @@ extern "C" {
   // array of strings.
   const char **ds_cline_args_unknown (const ds_cline_t *cline,
                                       const char **known,
-                                      size_t from);
+                                      size_t from,
+                                      size_t to);
   const char **ds_cline_flags_unknown (const ds_cline_t *cline,
                                        const char **known);
 

@@ -125,12 +125,13 @@ const ds_kvpair_t *ds_cline_flag_get (ds_cline_t *cline, size_t i)
 
 
 
-static bool cline_arg_test (const ds_cline_t *cline, const char *arg, size_t from)
+static bool cline_arg_test (const ds_cline_t *cline, const char *arg,
+                            size_t from, size_t to)
 {
   if (!cline || !arg)
        return false;
 
-  for (size_t i=from; i < cline->nargs; i++) {
+  for (size_t i=from; i < cline->nargs && i < to; i++) {
     if ((strcmp (cline->args[i], arg)) == 0)
       return true;
   }
@@ -139,7 +140,7 @@ static bool cline_arg_test (const ds_cline_t *cline, const char *arg, size_t fro
 
 bool ds_cline_arg_test (const ds_cline_t *cline, const char *arg)
 {
-  return cline_arg_test (cline, arg, 0);
+  return cline_arg_test (cline, arg, 0, cline->nargs);
 }
 
 const char *ds_cline_flag_value (const ds_cline_t *cline, const char *flag)
@@ -187,7 +188,8 @@ static const char *strarray_find (const char **haystack, const char *needle)
 
 const char **ds_cline_args_unknown (const ds_cline_t *cline,
                                     const char **known,
-                                    size_t from)
+                                    size_t from,
+                                    size_t to)
 {
   if (!cline || !known || from >= cline->nargs)
     return NULL;
@@ -197,7 +199,7 @@ const char **ds_cline_args_unknown (const ds_cline_t *cline,
     return NULL;
 
   size_t idx = 0;
-  for (size_t i=from; i < cline->nargs; i++) {
+  for (size_t i=from; i < cline->nargs && i < to; i++) {
     if (!(strarray_find (known, cline->args[i])))
       ret[idx++] = cline->args[i];
   }

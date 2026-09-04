@@ -62,7 +62,7 @@ static bool test_args (const char *name, int argc, char **argv)
   static const char *known_args[] = {
     "arg1", "arg2", NULL,
   };
-  const char **non_args = ds_cline_args_unknown (cline, known_args, 0);
+  const char **non_args = ds_cline_args_unknown (cline, known_args, 0, 100);
   for (size_t i=0; non_args && non_args[i]; i++) {
     printf ("[%s]: arg not recognised [%s]\n", name, non_args[i]);
   }
