@@ -58,6 +58,28 @@ static bool test_args (const char *name, int argc, char **argv)
   }
   free (dups);
 
+
+  static const char *known_args[] = {
+    "arg1", "arg2", NULL,
+  };
+  const char **non_args = ds_cline_args_unknown (cline, known_args, 0);
+  for (size_t i=0; non_args && non_args[i]; i++) {
+    printf ("[%s]: arg not recognised [%s]\n", name, non_args[i]);
+  }
+  free (non_args);
+
+
+  static const char *known_flags[] = {
+    "arg1", "arg2", NULL,
+  };
+  const char **non_flags = ds_cline_flags_unknown (cline, known_flags);
+  for (size_t i=0; non_flags && non_flags[i]; i++) {
+    printf ("[%s]: flag not recognised [%s]\n", name, non_flags[i]);
+  }
+  free (non_flags);
+
+
+
   for (int i=0; i < argc; i++) {
     free (argv[i]);
   }
@@ -73,11 +95,11 @@ int main (void)
   char *argv1[] = { "prog", NULL };
 
   int argc2 = 4;
-  char *argv2[] = { "prog", "arg", "--flag1=two", "arg2", NULL };
+  char *argv2[] = { "prog", "arg", "--flag1=f1", "arg2", NULL };
 
   int argc3 = 5;
   char *argv3[] = {
-    "prog", "--flag 1=two values", "--no-value", "--", "extra-arg", NULL
+    "prog", "--flag1=two values", "--no-value", "--", "extra-arg", NULL
   };
 
   int argc4 = 6;

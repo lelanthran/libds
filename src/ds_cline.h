@@ -44,6 +44,25 @@ extern "C" {
   // The returned array is terminated with a NULL pointer.
   const char **ds_cline_flag_values (ds_cline_t *cline, const char *flag);
 
+  // Two convenience functions to allow a caller to:
+  //    1. Return a list of unrecognised args
+  //    2. Return a list of unrecognised flags
+  // Returning a list of unrecognised args also takes a position to search
+  // from because it is not unusual to have the first argument be a command
+  // and the second, third, etc be sub-commands. The position allows each
+  // command to determine if the sub-commands are valid for that specific
+  // command.
+  // In both functions, the caller must free the returned array but not the
+  // individual strings within the array. The returned value may be NULL if
+  // there are no unknown args/flags.
+  // In both cases the list of known args/flags is passed as a NULL-terminated
+  // array of strings.
+  const char **ds_cline_args_unknown (const ds_cline_t *cline,
+                                      const char **known,
+                                      size_t from);
+  const char **ds_cline_flags_unknown (const ds_cline_t *cline,
+                                       const char **known);
+
 
 #ifdef __cplusplus
 };

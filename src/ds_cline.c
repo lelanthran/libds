@@ -125,16 +125,21 @@ const ds_kvpair_t *ds_cline_flag_get (ds_cline_t *cline, size_t i)
 
 
 
-bool ds_cline_arg_test (const ds_cline_t *cline, const char *arg)
+static bool cline_arg_test (const ds_cline_t *cline, const char *arg, size_t from)
 {
   if (!cline || !arg)
        return false;
 
-  for (size_t i=0; i < cline->nargs; i++) {
+  for (size_t i=from; i < cline->nargs; i++) {
     if ((strcmp (cline->args[i], arg)) == 0)
       return true;
   }
   return false;
+}
+
+bool ds_cline_arg_test (const ds_cline_t *cline, const char *arg)
+{
+  return cline_arg_test (cline, arg, 0);
 }
 
 const char *ds_cline_flag_value (const ds_cline_t *cline, const char *flag)
@@ -170,3 +175,54 @@ const char **ds_cline_flag_values (ds_cline_t *cline, const char *flag)
   }
   return ret;
 }
+
+static const char *strarray_find (const char **haystack, const char *needle)
+{
+  for (size_t i=0; haystack && haystack[i]; i++) {
+    if ((strcmp (haystack[i], needle)) == 0)
+      return haystack[i];
+  }
+  return NULL;
+}
+
+const char **ds_cline_args_unknown (const ds_cline_t *cline,
+                                    const char **known,
+                                    size_t from)
+{
+  if (!cline || !known || from >= cline->nargs)
+    return NULL;
+
+  const char **ret = NULL;
+  if (!(ret = calloc (cline->nargs + 1, sizeof *ret)))
+    return NULL;
+
+  size_t idx = 0;
+  for (size_t i=from; i < cline->nargs; i++) {
+    if (!(strarray_find (known, cline->args[i])))
+      ret[idx++] = cline->args[i];
+  }
+
+  return ret;
+}
+
+const char **ds_cline_flags_unknown (const ds_cline_t *cline,
+                                     const char **known)
+{
+  if (!cline || !known)
+    return NULL;
+
+  const char **ret = NULL;
+  if (!(ret = calloc (cline->nflags + 1, sizeof *ret)))
+    return NULL;
+
+  size_t idx = 0;
+  for (size_t i=0; i < cline->nflags; i++) {
+    const char *flag = ds_kvpair_key_get (cline->flags[i]);
+    if (!(strarray_find (known, flag)))
+      ret[idx++] = flag;
+  }
+
+  return ret;
+}
+
+
