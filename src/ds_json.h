@@ -26,9 +26,16 @@ extern "C" {
 
    void ds_json_del (ds_json_t *json);
 
+   // NOTE: These functions only return NULL in the OOM case. For all other
+   // errors an internal error flag is set which can be checked with
+   // ds_json_error().
    ds_json_t *ds_json_parse_string (const char *name, const char *src);
    ds_json_t *ds_json_parse_stream (const char *name, FILE *infile);
    ds_json_t *ds_json_parse_value (const char *value);
+
+   // Returns true if there is an error detected with this object, false
+   // otherwise.
+   bool ds_json_error (const ds_json_t *json);
 
    // Create a new JSON object or array, or any other json type
    ds_json_t *ds_json_object_new (void);

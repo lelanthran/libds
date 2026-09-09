@@ -996,6 +996,11 @@ ds_json_t *ds_json_parse_value (const char *value)
    return ret;
 }
 
+bool ds_json_error (const ds_json_t *json)
+{
+  return json ? json->error : true;
+}
+
 ds_json_t *ds_json_object_new (void)
 {
    return json_new_object ();

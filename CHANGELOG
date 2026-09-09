@@ -4,7 +4,7 @@ Features
 1. Adds kv_pair_t datatype for storing a single record of key/value pair.
 2. Adds a strbuilder_t datatype for building strings.
 3. Adds a cline_t datatype to represent parsed command-line options.
-
+4. Adds ds_json_error() to retrieve error flag of a ds_json_t object.
 
 
 # v1.0.8 - Mon Jun 22 22:46:55 2026 +0200
