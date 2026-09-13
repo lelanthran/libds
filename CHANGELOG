@@ -5,6 +5,8 @@ Features
 2. Adds a strbuilder_t datatype for building strings.
 3. Adds a cline_t datatype to represent parsed command-line options.
 4. Adds ds_json_error() to retrieve error flag of a ds_json_t object.
+5. Adds a `dsa_array_ins()` function to insert at any position.
+6. Adds a `ds_array_ptr_index()` function to find pointer positions.
 
 
 # v1.0.8 - Mon Jun 22 22:46:55 2026 +0200

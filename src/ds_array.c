@@ -35,14 +35,20 @@ ds_array_t *ds_array_copy (const ds_array_t *src, size_t from_index, size_t to_i
    ds_array_t *ret = ds_array_new ();
    bool error = true;
 
-   if (!src)
+   if (!src || !ret) {
+      ds_array_del (ret);
       return NULL;
+   }
 
    nitems = ds_array_length (src);
 
    for (size_t i=from_index; i>=from_index && i<to_index && i<nitems; i++) {
-      if (!(ds_array_ins_tail (ret, src->array[i])))
+      if (!(ds_array_ins_tail (ret, src->array[i])) && src->array[i])
          goto errorexit;
+   }
+   if (!ret->nitems) {
+      ds_array_del (ret);
+      return NULL;
    }
 
    error = false;
@@ -125,9 +131,29 @@ void ds_array_shrink_to_fit (ds_array_t *ll)
    ll->array = tmp;
 }
 
+void *ds_array_ins (ds_array_t *ll, void *el, size_t pos)
+{
+   if (!ll)
+      return NULL;
+
+   if (pos >= ll->nitems)
+      return ds_array_ins_tail (ll, el);
+
+   if (!(ds_array_grow (ll, ll->nitems + 1)))
+      return NULL;
+
+   size_t count = ll->nitems - pos;
+   memmove (&ll->array[pos + 1], &ll->array[pos], (sizeof *(ll->array)) * (count + 1));
+
+   ll->array[pos] = el;
+   ll->nitems++;
+
+   return el;
+}
+
 void *ds_array_ins_tail (ds_array_t *ll, void *el)
 {
-   if (!ll || !el)
+   if (!ll)
       return NULL;
 
    if (!(ds_array_grow (ll, 1)))
@@ -140,7 +166,7 @@ void *ds_array_ins_tail (ds_array_t *ll, void *el)
 
 void *ds_array_ins_head (ds_array_t *ll, void *el)
 {
-   if (!ll || !el)
+   if (!ll)
       return NULL;
 
    size_t endpos = ll->nitems;
@@ -204,6 +230,18 @@ void *ds_array_rm_ptr (ds_array_t *ll, const void *ptr)
          return ds_array_rm (ll, i-1);
    }
    return NULL;
+}
+
+size_t ds_array_ptr_index (const ds_array_t *ll, const void *ptr)
+{
+   if (!ll)
+      return (size_t)-1;
+
+   for (size_t i=0; i < ll->nitems; i++) {
+      if ((ll->array[i]) == ptr)
+         return i;
+   }
+   return (size_t)-1;
 }
 
 void **ds_array_all (ds_array_t *ll, void ***dst, size_t *dstlen)
